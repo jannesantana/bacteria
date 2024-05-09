@@ -1,5 +1,5 @@
 // 
-//  To compile: c++ swarming1D_GN_V1_correct.cc cokus3.c  -o swarming1D -lgsl -lgslcblas -lm
+//  To compile: c++ abs_anti_mips_spinoff.cc cokus3.c  -o antimips -lgsl -lgslcblas -lm
 
 using namespace std;
 
@@ -20,7 +20,7 @@ using namespace std;
 
 #define TS 10000	/* Conf of particles is saved every TS time steps */
 #define T_OP 10		/* Order parameter is saved every T_OP time steps */
-#define T_SNAP 10	/* A snapshot is saved every T_SNAP time steps */
+#define T_SNAP 1	/* A snapshot is saved every T_SNAP time steps */
 
 
 extern void seedMT2();
@@ -62,9 +62,10 @@ int main (int argc, const char * argv[]) {
 	int TempsTotal;
 	double Dt; 
 	int tSave=0;	
-
-
-
+    double Vo;
+    double eta;
+    double R;
+    double disp;
 
 
 
@@ -80,14 +81,15 @@ int main (int argc, const char * argv[]) {
 	  char * pEnd;
 // OUTPUTS VARIABLES NAME ENTER   
 
-	//   N=atoi(argv[1]);
-	//   TopeX=atoi(argv[2]);
-	//   TopeY=TopeX;
-	//   v_ext = strtod(argv[3], &pEnd);
-	//   v_cont = strtod(argv[4], &pEnd);
-	//   rate_cont = strtod(argv[5], &pEnd);
-    //   rate_ext = strtod(argv[6], &pEnd);
-    //   k_hook = strtod(argv[7], &pEnd);
+	  N=atoi(argv[1]);
+	  TopeX=atoi(argv[2]);
+	  TopeY=atoi(argv[3]);
+	  R = strtod(argv[4], &pEnd);
+	  eta = strtod(argv[5], &pEnd);
+	    TempsTotal=atoi(argv[6]);
+	  TempsInitial=0.7*TempsTotal;
+      Dt = strtod(argv[7], &pEnd);
+     Vo = strtod(argv[8], &pEnd);
       
 	
 	//   TempsTotal=atoi(argv[8]);
@@ -103,12 +105,16 @@ int main (int argc, const char * argv[]) {
 	double distancePP=0;
 	double distance=0;
 	double Dx=0;
+     double Dy;
     double TheFactor;
     double Neighbors=0;
-    double R=1;
+    double Alignment;
+
 	double R2=R*R; 
 	double Rrep;
 	double kResort;
+    double rand_nbr;
+    double dist0=sqrt(TopeX*TopeX + TopeY*TopeY)/100;
 
 
 
@@ -119,29 +125,28 @@ int main (int argc, const char * argv[]) {
 
 
 if (argc>1) {
-	//   strcpy(filename,"N_"); strcat(filename,argv[1]);
-	//   strcat(filename,"_L_"); strcat(filename,argv[2]);
-	//   strcat(filename,"_vext_"); strcat(filename,argv[3]);
-	//   strcat(filename,"_vcont_"); strcat(filename,argv[4]);
-	//   strcat(filename,"_rext_"); strcat(filename,argv[5]);
-	//   strcat(filename,"_rcont_"); strcat(filename,argv[6]);
-	//   strcat(filename,"_hook_"); strcat(filename,argv[7]);
-    //   strcat(filename,"_T_"); strcat(filename,argv[8]);
-    //   strcat(filename,"_Dt_"); strcat(filename,argv[9]);
-	//   strcat(filename,".dat");
+	  strcpy(filename,"N_"); strcat(filename,argv[1]);
+	  strcat(filename,"_Lx_"); strcat(filename,argv[2]);
+       strcat(filename,"_Ly_"); strcat(filename,argv[3]);
+	  strcat(filename,"_R_"); strcat(filename,argv[4]);
+      strcat(filename,"_eta_"); strcat(filename,argv[5]);
+      strcat(filename,"_T_"); strcat(filename,argv[6]);
+      strcat(filename,"_Dt_"); strcat(filename,argv[7]);
+      strcat(filename,"_Vo_"); strcat(filename,argv[8]);
+	  strcat(filename,".dat");
 
     // String to name the files 
 
 	}
 
 
-    char filename_MSD[100];
+    // char filename_MSD[100];
  
-	strcpy(filename_MSD,"MSD_"); strcat(filename_MSD,filename);
+	// strcpy(filename_MSD,"MSD_"); strcat(filename_MSD,filename);
 
-	ofstream toMSD(filename_MSD);          			 // open file 
-	toMSD.precision(5);
-	toMSD.setf(ios::scientific,ios::floatfield);
+	// ofstream toMSD(filename_MSD);          			 // open file 
+	// toMSD.precision(5);
+	// toMSD.setf(ios::scientific,ios::floatfield);
 	
 	//===================
 
@@ -153,13 +158,13 @@ if (argc>1) {
 	toXY.precision(5);
 	toXY.setf(ios::scientific,ios::floatfield);
 //==============================================
-	char filename_spring[100];
+	char Polar[100];
  
-	strcpy(filename_spring,"spring_"); strcat(filename_spring,filename);
+	strcpy(Polar,"Polar_Order_"); strcat(Polar,filename);
 
-	ofstream toSPRING(filename_spring);          			 // open file 
-	toSPRING.precision(5);
-	toSPRING.setf(ios::scientific,ios::floatfield);
+	ofstream toPolar(Polar);          			 // open file 
+	toPolar.precision(5);
+	toPolar.setf(ios::scientific,ios::floatfield);
 
 	
 	//===================	
@@ -167,17 +172,16 @@ if (argc>1) {
 	// double *RodsSpace = (double*) malloc(N * sizeof(double)); //double Rods[N][1];
 	double *newRodsSpaceX = (double*) malloc(N * sizeof(double)); //double newRods[N][1];
     double *newRodsSpaceY = (double*) malloc(N * sizeof(double)); //double newRods[N][1];
-	double *aux_unwrap = (double*) malloc(N * sizeof(double));
-	double *ini_unwrap = (double*) malloc(N * sizeof(double));
+	// double *aux_unwrap = (double*) malloc(N * sizeof(double));
+	// double *ini_unwrap = (double*) malloc(N * sizeof(double));
     double *RodsAngle = (double*) malloc(N * sizeof(double));
-	double *newRodsSpace = (double*) malloc(N * sizeof(double)); //double newRods[N][1];
     double *newRodsAngle = (double*) malloc(N * sizeof(double)); //double newRods[N][1];
     double *RodsSpaceX = (double*) malloc(N * sizeof(double)); //double Rods[N][1];
     double *RodsSpaceY = (double*) malloc(N * sizeof(double)); //double Rods[N][1];
 
 	int i,j,ii,k,t;
     int part_now;
-    double Dy;
+   
 
     for (j=0; j<N; j++) 
 	{
@@ -205,44 +209,77 @@ if (argc>1) {
 
 	for(t=0;t<TempsTotal;t++)
 	{
+        // cout << "time=" << t;
 
         for(i=0;i<N;i++){
             Neighbors=0;
             part_now = i;
+            Alignment=0;
             
 
-            for (j = 0; i < N; j++)
+            for (j = 0; j < N; j++)
             {
                 if (j!= part_now)
                 {
-                    Dx = RodsSpaceX[j] - RodsSpaceX[j];
-                    Dy = RodsSpaceY[j] - RodsSpaceY[j];
+                    Dx = RodsSpaceX[j] - RodsSpaceX[i];
+                    Dy = RodsSpaceY[j] - RodsSpaceY[i];
 
                     if ((Dx>0) && (Dx>(TopeX/2)))  Dx=Dx-TopeX;
-					        if ((Dx<0) && (Dx<-(TopeX/2))) Dx=Dx+TopeX;	
+					        if ((Dx<0) && (Dx< -TopeX/2)) Dx=Dx+TopeX;	
 
                     if ((Dy>0) && (Dy>(TopeY/2)))  Dy=Dy-TopeX;
 					        if ((Dy<0) && (Dy<-(TopeY/2))) Dy=Dy+TopeY;	
 
                 distance = sqrt(Dx*Dx + Dy*Dy);
+                // if (i==1) cout << "part" << j <<", dis=" << distance << "\n";
                 if ((distance<R) && (distance>0))
                 {
                     Neighbors++; 
+                    Alignment = Alignment + sin(RodsAngle[j]- RodsAngle[i]);
                 }
                 
 
                 }
                 
             }
+
+if (Neighbors ==0) 
+{
+    rand_nbr = (rand()/(double)RAND_MAX);
+    disp = -log(rand_nbr/dist0);
+     
+}
+else {disp = Neighbors;}
+
             
 // UPDATE ESSA MERDA //
 
+newRodsSpaceX[i] = RodsSpaceX[i] + cos(RodsAngle[i])*Vo*(Neighbors+0.1)*Dt ;
+newRodsSpaceY[i] = RodsSpaceY[i] + sin(RodsAngle[i])*Vo*(Neighbors+0.1)*Dt;
+newRodsAngle[i] = RodsAngle[i] + eta*gsl_ran_gaussian(rg,SqrtDeltaT) + Alignment*Dt/(1+Neighbors);
 
+// if (i==1) cout  << "neighbors=" << Neighbors << "\n" << "--------" << "\n";
+ 
 
+// BOundary conditions 
 
+            if (newRodsSpaceX[i]<=0)		newRodsSpaceX[i]=TopeX+newRodsSpaceX[i];
+		    if (newRodsSpaceX[i]>=TopeX) 	newRodsSpaceX[i]=newRodsSpaceX[i]-TopeX;
+            if (newRodsSpaceY[i]<=0)		newRodsSpaceY[i]=TopeY+newRodsSpaceY[i];
+		    if (newRodsSpaceY[i]>=TopeY) 	newRodsSpaceY[i]=newRodsSpaceY[i]-TopeY;
+			if (newRodsAngle[i]>2*PI) 	newRodsAngle[i]=newRodsAngle[i]-2*PI;
+			if (newRodsAngle[i]<0) 		newRodsAngle[i]=newRodsAngle[i]+2*PI;
         }
 
-        
+    for(k=0;k<N;k++)
+		 {
+		   RodsSpaceX[k]=newRodsSpaceX[k];
+           RodsSpaceY[k]=newRodsSpaceY[k];
+		   RodsAngle[k]=newRodsAngle[k];
+
+		   if (t%T_SNAP==0) toXY << RodsSpaceX[k] << " " << RodsSpaceY[k] << " " << RodsAngle[k] << "\n";
+		 }
+
 
     }
 
