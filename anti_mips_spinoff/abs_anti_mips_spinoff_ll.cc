@@ -1,5 +1,5 @@
 // 
-//  To compile: c++ abs_anti_mips_spinoff.cc cokus3.c  -o antimips -lgsl -lgslcblas -lm
+//  To compile: c++ abs_anti_mips_spinoff_ll.cc cokus3.c  -o antimips -lgsl -lgslcblas -lm
 
 using namespace std;
 
@@ -191,8 +191,8 @@ if (argc>1) {
 	int dimension=2;
 
 	int lcx  = Lx;
-	int lcy=Ly;
-	int lcxy = Lx*Ly;
+	int lcy= Ly;
+	// int lcxy = Lx*Ly;
 
 	int head[lcx][lcy];
 	int lscl[N];
@@ -206,10 +206,13 @@ if (argc>1) {
 
 	int c,c1,a,d,d1;
 
+	
+
     for (j=0; j<N; j++) 
 	{
 		//for (i=0; i<2; i++) 
 		//{
+			// cout << "time is running";
 			RodsSpaceX[j]=0;
             RodsSpaceY[j]=0;
 			RodsAngle[j]=0;
@@ -228,20 +231,33 @@ if (argc>1) {
 		RodsAngle[i]=(rand()/(double)RAND_MAX)*2*PI; 
 	}
 
+	
+
 
 
 	for(t=0;t<TempsTotal;t++)
 	{
+		
         // cout << "time=" << t;
 
 
 		for (c=0; c<lcx;c++) {
-			for (d=0; c<lcy;d++) {head[c][d]=nothing;}
+			for (d=0; d<lcy;d++) {
+				// cout << head[c][d] << "\n";
+				head[c][d]=nothing;
+				
+				}
+
 		}
+			//  cout <<  d << "\n";
+			
+		// cout << "finish" << "\n";
 
+		
 
+		
         for(i=0;i<N;i++){
-
+			
             
 			mc[0]=int(RodsSpaceX[i]/R);
 			mc[1]=int(RodsSpaceY[i]/R);
@@ -251,16 +267,32 @@ if (argc>1) {
 		  head[c][d]=i;
 		}
 
-		for (mc[0]=0; mc[0]<lc[0]; (mc[0])++) {}
+		for (mc[0]=0; mc[0]<lc[0]; (mc[0])++) {
 
+			for (mc[1]=0;mc[1]<lc[1];mc[1]++){
+
+				c=mc[0];
+				d=mc[1];
+				i = head[c][d]; 
+				
+				while (i!= nothing) {
+
+					cout << "Particle 5" << " before update: (" << RodsSpaceX[5] << ", " << RodsSpaceY[5] << "), angle=" << RodsAngle[5] << endl;
 		            Neighbors=0;
             part_now = i;
             Alignment=0;
 
-            for (j = 0; j < N; j++)
-            {
-                if (j!= part_now)
+            for (mc1[0]=mc[0]-1; mc1[0]<=mc[0]+1; (mc1[0])++) { 
+				for (mc1[1]=mc[1]-1; mc1[1]<=mc[1]+1; mc1[1]++){ 
+				c1 = ((mc1[0]+lc[0])%lc[0]);
+				d1 = ((mc1[1]+lc[1])%lc[1]);
+
+			  	j = head[c1][d1];
+
+                while (j!= nothing)
+
                 {
+					if (!(i==j)) {
                     Dx = RodsSpaceX[j] - RodsSpaceX[i];
                     Dy = RodsSpaceY[j] - RodsSpaceY[i];
 
@@ -277,20 +309,25 @@ if (argc>1) {
                     Neighbors++; 
                     Alignment = Alignment + sin(RodsAngle[j]- RodsAngle[i]);
                 }
-                
-
+					}
+				j = lscl[j];	
+				if (Neighbors ==0) 
+						{
+							rand_nbr = (rand()/(double)RAND_MAX);
+							disp = -log(rand_nbr/dist0);
+							
+						}
+						else {disp = Neighbors;}
+				
                 }
                 
-            }
+            } // end of mc1
+			} // end of mc1
 
-if (Neighbors ==0) 
-{
-    rand_nbr = (rand()/(double)RAND_MAX);
-    disp = -log(rand_nbr/dist0);
-     
-}
-else {disp = Neighbors;}
 
+
+		
+		
             
 // UPDATE ESSA MERDA //
 
@@ -299,18 +336,22 @@ newRodsSpaceY[i] = RodsSpaceY[i] + sin(RodsAngle[i])*Vo*(Neighbors+0.1)*Dt;
 newRodsAngle[i] = RodsAngle[i] + eta*gsl_ran_gaussian(rg,SqrtDeltaT) + Alignment*Dt/(1+Neighbors);
 
 // if (i==1) cout  << "neighbors=" << Neighbors << "\n" << "--------" << "\n";
- 
+     cout << "Particle 5" << " after update: (" << newRodsSpaceX[5] << ", " << newRodsSpaceY[5] << "), angle=" << newRodsAngle[5] << endl;
+
 
 // BOundary conditions 
 
-            if (newRodsSpaceX[i]<=0)		newRodsSpaceX[i]=TopeX+newRodsSpaceX[i];
-		    if (newRodsSpaceX[i]>=TopeX) 	newRodsSpaceX[i]=newRodsSpaceX[i]-TopeX;
-            if (newRodsSpaceY[i]<=0)		newRodsSpaceY[i]=TopeY+newRodsSpaceY[i];
+            if (newRodsSpaceX[i]< 0)		newRodsSpaceX[i]+= TopeX;
+		    if (newRodsSpaceX[i]>=TopeX) 	newRodsSpaceX[i]-=TopeX;
+            if (newRodsSpaceY[i]< 0)		newRodsSpaceY[i]=TopeY+newRodsSpaceY[i];
 		    if (newRodsSpaceY[i]>=TopeY) 	newRodsSpaceY[i]=newRodsSpaceY[i]-TopeY;
 			if (newRodsAngle[i]>2*PI) 	newRodsAngle[i]=newRodsAngle[i]-2*PI;
 			if (newRodsAngle[i]<0) 		newRodsAngle[i]=newRodsAngle[i]+2*PI;
-        }
 
+			i=lscl[i];
+				} // end of while i=! nothing
+        } // end of mc1
+	} // end of mc
     for(k=0;k<N;k++)
 		 {
 		   RodsSpaceX[k]=newRodsSpaceX[k];
@@ -319,7 +360,6 @@ newRodsAngle[i] = RodsAngle[i] + eta*gsl_ran_gaussian(rg,SqrtDeltaT) + Alignment
 
 		   if (t%T_SNAP==0) toXY << RodsSpaceX[k] << " " << RodsSpaceY[k] << " " << RodsAngle[k] << "\n";
 		 }
-
 
     }
 
