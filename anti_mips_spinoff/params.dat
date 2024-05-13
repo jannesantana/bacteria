@@ -3,6 +3,6 @@ Lx 15
 Ly 15
 R 2
 eta 0.1
-T 10
+T 100
 Dt 0.1
 Vo 1 

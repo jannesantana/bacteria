@@ -1,6 +1,6 @@
 // 
 //  To compile: c++ abs_anti_mips_spinoff_ll.cc cokus3.c  -o antimips -lgsl -lgslcblas -lm
-
+// If in mac : c++ -Wall -I/opt/homebrew/Cellar/gsl/2.7.1/include/ -L/opt/homebrew/Cellar/gsl/2.7.1/lib/ abs_anti_mips_spinoff_ll.cc cokus3.c -o antimips -lgsl -lgslcblas -lm
 using namespace std;
 
 #include <stdio.h>
@@ -277,7 +277,7 @@ if (argc>1) {
 				
 				while (i!= nothing) {
 
-					cout << "Particle 5" << " before update: (" << RodsSpaceX[5] << ", " << RodsSpaceY[5] << "), angle=" << RodsAngle[5] << endl;
+					
 		            Neighbors=0;
             part_now = i;
             Alignment=0;
@@ -311,21 +311,23 @@ if (argc>1) {
                 }
 					}
 				j = lscl[j];	
-				if (Neighbors ==0) 
+				
+				
+                }
+
+				
+                
+            } // end of mc1
+			} // end of mc1
+
+
+if (Neighbors ==0) 
 						{
 							rand_nbr = (rand()/(double)RAND_MAX);
 							disp = -log(rand_nbr/dist0);
 							
 						}
 						else {disp = Neighbors;}
-				
-                }
-                
-            } // end of mc1
-			} // end of mc1
-
-
-
 		
 		
             
@@ -336,8 +338,9 @@ newRodsSpaceY[i] = RodsSpaceY[i] + sin(RodsAngle[i])*Vo*(Neighbors+0.1)*Dt;
 newRodsAngle[i] = RodsAngle[i] + eta*gsl_ran_gaussian(rg,SqrtDeltaT) + Alignment*Dt/(1+Neighbors);
 
 // if (i==1) cout  << "neighbors=" << Neighbors << "\n" << "--------" << "\n";
-     cout << "Particle 5" << " after update: (" << newRodsSpaceX[5] << ", " << newRodsSpaceY[5] << "), angle=" << newRodsAngle[5] << endl;
-
+// if (newRodsSpaceX[i] > 13) {
+//      cout << "particle"<< i << " is in "  << newRodsSpaceX[i] << endl;
+// }
 
 // BOundary conditions 
 
@@ -350,8 +353,8 @@ newRodsAngle[i] = RodsAngle[i] + eta*gsl_ran_gaussian(rg,SqrtDeltaT) + Alignment
 
 			i=lscl[i];
 				} // end of while i=! nothing
-        } // end of mc1
-	} // end of mc
+        } // end of mc 1
+	} // end of mc 0
     for(k=0;k<N;k++)
 		 {
 		   RodsSpaceX[k]=newRodsSpaceX[k];
