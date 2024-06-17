@@ -6,18 +6,18 @@
 #define PI 3.14159265358979323846
 
 // Constants and definitions 
-const double box = 2.5; // Size of the 2D box (assuming a square box)
-const double CUTOFF =1.0;    // Interaction cutoff distance
-const int N_particles = 1;  // Number of particles
+const double box = 10; // Size of the 2D box (assuming a square box)
+const double CUTOFF =4.0;    // Interaction cutoff distance
+const int N_particles = 100;  // Number of particles
 const int Cells = box / CUTOFF; // Number of cells per dimension
-int T = 120;
+int T = 1000;
 double Dt = 0.01; // Duration of each time step
 double new_coord;
-const double k_spring=3.0; // spring constand
+const double k_spring=4.0; // spring constand
 const double rate=20.0; // extending rate 
-const double lo=3.0;
+const double lo=0.8;
 const double epsilon = 0.1; //potential well
-const double sigma = 0.5;   // potential zero cutoff
+const double sigma = 0.15;   // potential zero cutoff
 // const double sigma_radius=0.8;
 
 // Particle structure
@@ -171,7 +171,7 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             
             particles[i].xp = particles[i].x + l*cos(particles[i].theta);
             particles[i].yp = particles[i].y + l*sin(particles[i].theta);
-            particles[i].theta = dis2(gen)* PI;
+            particles[i].theta = dis(gen)* 2*PI;
             //std::cout << "angle = " << particles[i].theta << "\n";
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
             particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
@@ -250,7 +250,7 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
                             // double fx = 0.0;
                             // double fy = 0.0;
-                            std::cout << "repulsion force= " <<force << "\n";
+                            // std::cout << "repulsion force= " <<force << "\n";
                             
                             //std::cout << "distance= " <<distance << "\n"; 
                             
@@ -263,11 +263,11 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
                     double distance_pili = sqrt(dx_pili*dx_pili + dy_pili*dy_pili);
                     if (distance_pili <= sigma) {
-                        std::cout << "---------ATTACHED!!!------" << "\n";
+                        // std::cout << "---------ATTACHED!!!------" << "\n";
                         pi.force_pili_x = 2*pi.force_pili_x;
                         pi.force_pili_y = 2*pi.force_pili_y;
-                        std::cout << "force_x = "<< particles[i].force_pili_x << "\n";
-                        std::cout << "force_y = "<< particles[i].force_pili_y << "\n";
+                        // std::cout << "force_x = "<< particles[i].force_pili_x << "\n";
+                        // std::cout << "force_y = "<< particles[i].force_pili_y << "\n";
                     }
 
                     }
