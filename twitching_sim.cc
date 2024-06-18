@@ -8,7 +8,7 @@
 // Constants and definitions 
 const double box = 10; // Size of the 2D box (assuming a square box)
 const double CUTOFF =4.0;    // Interaction cutoff distance
-const int N_particles = 100;  // Number of particles
+const int N_particles = 200;  // Number of particles
 const int Cells = box / CUTOFF; // Number of cells per dimension
 int T = 1000;
 double Dt = 0.01; // Duration of each time step
@@ -16,7 +16,7 @@ double new_coord;
 const double k_spring=4.0; // spring constand
 const double rate=20.0; // extending rate 
 const double lo=0.8;
-const double epsilon = 0.1; //potential well
+const double epsilon = 1.0; //potential well
 const double sigma = 0.15;   // potential zero cutoff
 // const double sigma_radius=0.8;
 
@@ -171,7 +171,7 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             
             particles[i].xp = particles[i].x + l*cos(particles[i].theta);
             particles[i].yp = particles[i].y + l*sin(particles[i].theta);
-            particles[i].theta = dis(gen)* 2*PI;
+            particles[i].theta = dis2(gen)*PI;
             //std::cout << "angle = " << particles[i].theta << "\n";
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
             particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
