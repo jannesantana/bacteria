@@ -1,0 +1,25 @@
+title = "FastTrack cfg"
+
+[parameters]
+spot = 2
+yTop = 0
+normAngle = 5
+regBack = 0
+maxTime = 5
+normPerim = 55
+thresh = 102
+reg = 0
+morphSize = 0
+xTop = 0
+maxArea = 150
+yBottom = 285
+morph = 0
+methBack = 0
+nBack = 100
+maxDist = 15
+minArea = 16
+lightBack = 1
+normArea = 8
+normDist = 20
+morphType = 2
+xBottom = 318

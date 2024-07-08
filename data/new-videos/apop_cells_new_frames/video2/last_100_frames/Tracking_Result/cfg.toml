@@ -3,9 +3,9 @@ title = "FastTrack cfg"
 [parameters]
 spot = 2
 yTop = 0
-normAngle = 5
+normAngle = 6
 regBack = 0
-maxTime = 5
+maxTime = 10
 normPerim = 55
 thresh = 102
 reg = 0
