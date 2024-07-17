@@ -30,6 +30,7 @@ struct Particle {
     double A; //prob of extending 
     int cellIndex; // Cell index in the linked list
     double sd_t;
+    double prev_A;
     double ini_posx, ini_posy;
     double aux_posx, aux_posy;
 };
@@ -88,6 +89,7 @@ void initializeParticles(Particle* particles) {
         particles[i].xp = 0.0;
         particles[i].yp  =0.0;
         particles[i].A = 0.0;
+        particles[i].prev_A = 0;
         particles[i].fx = 0.0;
         particles[i].fy = 0.0;
         particles[i].sd_t = 0.0;
@@ -158,6 +160,8 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
     for (int i = 0; i < N_particles; ++i) {
 
+        particles[i].prev_A = particles[i].A;
+
 
         particles[i].A = dis(gen);
         // double force_pili_x;
@@ -167,11 +171,14 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
         // std::cout << "prob of flipping = "<< particles[i].A << "\n";
         // std::cout << "rate = "<< rate*Dt << "\n";
-        if (particles[i].A <= rate*Dt) {
+        if ( (particles[i].A <= rate*Dt)  & (particles[i].prev_A <= rate*Dt)) {
             
+            // std::cout << "MOVE + KEEP THETA" << "\n";
+            particles[i].theta = particles[i].theta;
             particles[i].xp = particles[i].x + l*cos(particles[i].theta);
             particles[i].yp = particles[i].y + l*sin(particles[i].theta);
-            particles[i].theta = dis2(gen)*PI;
+           
+          
             //std::cout << "angle = " << particles[i].theta << "\n";
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
             particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
@@ -181,10 +188,25 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
             
         }
-        else {
+        else if ( (particles[i].A <= rate*Dt) & (particles[i].prev_A > rate*Dt) ) {
+
+            // std::cout << "MOVE + NOT KEEP THETA" << "\n";
+            particles[i].theta = dis(gen)*2*PI;
+            particles[i].xp = particles[i].x + l*cos(particles[i].theta);
+            particles[i].yp = particles[i].y + l*sin(particles[i].theta);
+
+            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+
+        }
+        else if (particles[i].A > rate*Dt) {
+
+            // std::cout << "NOT MOVE" << "\n";
             l=0.0;
+            // particles[i].prob_A == 0;
             particles[i].force_pili_x = 0.0;
             particles[i].force_pili_y= 0.0;
+        
         }
 
 
