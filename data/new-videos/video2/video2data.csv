@@ -1,4 +1,4 @@
-spot ID,Track ID,T (sec),x (micron),y (micron),Frame ,Ids
+spot ID,Track ID,T (sec),x (micron),y (micron),Frame,Ids
 2044,0,0.000,87.581,115.039,0,0
 2049,0,3.331,87.764,115.039,1,1
 2054,0,6.662,88.182,114.989,2,2
