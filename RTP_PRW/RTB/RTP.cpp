@@ -3,14 +3,15 @@
 #include <cmath>
 #include <fstream>
 #include <random>
+#include <sstream> 
 #define PI 3.14159265358979323846
 
 
 
 const double box = 10;// Size of the 2D box (assuming a square box)
-const int N_particles = 100;  // Number of particles
-int T = 500;
-double Dt = 0.01;
+const int N_particles = 2000;  // Number of particles
+int T = 200;
+double Dt = 0.1;
 const double rate=40.0;
 const double v0=2;
 
@@ -53,10 +54,10 @@ void initializeParticles(Particle* particles) {
 }
 
 
-void savePositions(const Particle* particles) { 
+void savePositions(const Particle* particles, const std::string& filename) { 
     std::ofstream file;
    
-    file.open("particle_positions.dat", std::ios::app); // open the file 
+    file.open(filename, std::ios::app); // open the file 
 
     // file << "Timestep " << timestep << "\n";
     for (int i = 0; i < N_particles; ++i) {
@@ -125,11 +126,20 @@ return dist;
     // }
   
     initializeParticles(particles);
-        std::ofstream file("particle_positions.dat"); // Create a new file or overwrite if it already exists
-        file.close();
-    
-    std::ofstream sd;
-    sd.open("squared_disp.dat"); 
+   std::stringstream particle_filename;
+    particle_filename << "particle_positions_N_particles_" << N_particles
+                      << "_box_" << box << "_T_" << T << "_Dt_" << Dt
+                      << "_rate_" << rate << "_v0_" << v0 << ".dat";
+
+    std::stringstream sd_filename;
+    sd_filename << "squared_disp_N_particles_" << N_particles
+                << "_box_" << box << "_T_" << T << "_Dt_" << Dt
+                << "_rate_" << rate << "_v0_" << v0 << ".dat";
+
+    std::ofstream particle_file(particle_filename.str());
+    particle_file.close();
+
+    std::ofstream sd(sd_filename.str());
 
         for (int t = 0; t < T; ++t) {
 
@@ -139,7 +149,7 @@ return dist;
 
         // std:: cout << store_msd << "\n";
             sd << (t*Dt) << " " << store_msd/N_particles << "\n";
-            savePositions(particles);
+            savePositions(particles,particle_filename.str());
         }
   free(particles);
     // free(head);
