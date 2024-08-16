@@ -1,0 +1,36 @@
+ ,            ,Video 2  ,               , ,            ,Video 3  ,               , ,            ,Video 4  ,
+ ,            ,         ,               , ,            ,         ,               , ,            ,         ,
+ ,Frame total ,Track ID ,Classification , ,Frame total ,Track ID ,Classification , ,Frame total ,Track ID ,Classification
+ ,200         ,0        ,Back           , ,400         ,0        ,Back           , ,382         ,5        ,Back
+ ,200         ,1        ,Leading_edge   , ,400         ,4        ,Back           , ,400         ,26       ,Back
+ ,200         ,2        ,Back           , ,400         ,5        ,Back           , ,400         ,27       ,Back
+ ,200         ,3        ,Leading_edge   , ,400         ,8        ,Back           , ,400         ,36       ,Back
+ ,200         ,5        ,Back           , ,400         ,15       ,Back           , ,400         ,40       ,Back
+ ,200         ,6        ,Back           , ,400         ,25       ,Back           , ,400         ,69       ,Back
+ ,200         ,7        ,Back           , ,400         ,26       ,Back           , ,400         ,70       ,Leading_edge
+ ,200         ,8        ,Back           , ,274         ,73       ,Back           , ,214         ,71       ,Back
+ ,200         ,40       ,Leading_edge   , ,247         ,74       ,Leading_edge   , ,400         ,72       ,Back
+ ,200         ,41       ,Leading_edge   , ,400         ,75       ,Back           , ,400         ,74       ,Back
+ ,200         ,42       ,Back           , ,364         ,76       ,Back           , ,400         ,75       ,Back
+ ,200         ,43       ,Back           , ,400         ,77       ,Back           , ,400         ,83       ,Back
+ ,200         ,44       ,Back           , ,328         ,79       ,Back           , ,400         ,84       ,Back
+ ,200         ,46       ,Leading_edge   , ,400         ,81       ,Back           , ,400         ,87       ,Back
+ ,200         ,47       ,Leading_edge   , ,400         ,82       ,Leading_edge   , ,400         ,88       ,Leading_edge
+ ,200         ,48       ,Leading_edge   , ,400         ,84       ,Back           , ,400         ,89       ,Leading_edge
+ ,200         ,50       ,Back           , ,400         ,290      ,Leading_edge   , ,218         ,91       ,Back
+ ,200         ,51       ,Leading_edge   , ,400         ,291      ,Leading_edge   , ,400         ,95       ,Back
+ ,200         ,52       ,Leading_edge   , ,400         ,292      ,Leading_edge   , ,400         ,100      ,Back
+ ,200         ,54       ,Back           , ,315         ,293      ,Back           , ,400         ,101      ,Back
+ ,184         ,55       ,Back           , ,349         ,297      ,Back           , ,400         ,102      ,Back
+ ,200         ,56       ,Leading_edge   , ,400         ,305      ,Back           , ,400         ,103      ,Leading_edge
+ ,200         ,57       ,Back           , ,400         ,306      ,Back           , ,400         ,105      ,Back
+ ,200         ,58       ,Back           , ,400         ,307      ,Leading_edge   , ,400         ,110      ,Back
+ ,200         ,59       ,Back           , ,370         ,497      ,Leading_edge   , ,400         ,111      ,Leading_edge
+ ,200         ,60       ,Back           , ,400         ,498      ,Leading_edge   , ,400         ,112      ,Back
+ ,200         ,61       ,Leading_edge   , ,400         ,499      ,Leading_edge   , ,400         ,113      ,Leading_edge
+ ,200         ,166      ,Leading_edge   , ,400         ,630      ,Leading_edge   , ,400         ,114      ,Leading_edge
+ ,            ,         ,               , ,400         ,631      ,Leading_edge   , ,400         ,115      ,Leading_edge
+ ,            ,         ,               , ,400         ,706      ,Leading_edge   , ,400         ,116      ,Leading_edge
+ ,            ,         ,               , ,400         ,707      ,Leading_edge   , ,400         ,118      ,Leading_edge
+ ,            ,         ,               , ,            ,         ,               , ,400         ,119      ,Leading_edge
+ ,            ,         ,               , ,            ,         ,               , ,400         ,120      ,Leading_edge
