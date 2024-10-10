@@ -41,8 +41,8 @@ void initializeParticles(Particle* particles) {
     
     for (int i = 0; i < N_particles; ++i) {
 
-        particles[i].x = 0.5*box; // random initial consitions 
-        particles[i].y = 0.5*box;
+        particles[i].x = 0.2*box; // in the middle
+        particles[i].y = 0.2*box;
 
         particles[i].theta = dis(gen) * 2 * PI;
         
