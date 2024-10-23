@@ -292,12 +292,12 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
                         // std::cout << "force_y = "<< particles[i].force_pili_y << "\n";
                     }
 
-                    }
+                    } // loop over particles j that intereact with i 
                     j = linkedList[j];
-                }
-            }
-        }
-    }
+                } // loop over particles j that intereact with i 
+            } // neighboring cells loop y
+        } // neighboring cells loop x
+    } // particle loop
 }
 
 // UPDATE PARTICLES POSITIONS AND ANGLES 
