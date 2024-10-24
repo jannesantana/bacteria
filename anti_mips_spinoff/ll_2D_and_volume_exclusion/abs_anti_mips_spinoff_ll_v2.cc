@@ -7,6 +7,7 @@
 #include <sstream>
 #include <map>
 #include <iostream>
+// #include <string.h>
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
@@ -87,6 +88,9 @@ struct Particle {
     double fx, fy; // colisional force 
     double alignment; 
     int neighbors; 
+    double avg_ang_region;
+    double defector;
+    int if_defector;
     int cellIndex; // Cell index in the linked list
     double sd_t;
 
@@ -146,6 +150,9 @@ void initializeParticles(Particle* particles) {
 		 particles[i].ini_posx = 0.0;
          particles[i].neighbors = 0;
         particles[i].ini_posy = 0.0;
+        particles[i].avg_ang_region=0.0;
+        particles[i].defector=0.0;
+        // particles[i].if_defector= -1;
         particles[i].aux_posx=0.0;
         particles[i].aux_posy=0.0;
         particles[i].cellIndex = getCellIndex(particles[i].x, particles[i].y); // get cell index 
@@ -212,10 +219,17 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
         particles[i].fy = 0.0;
         particles[i].alignment= 0.0;
         particles[i].neighbors = 1;
+        particles[i].avg_ang_region=0.0;
+        particles[i].defector=0.0;
+        // particles[i].if_defector= -1;
         // particles[i].force_pili_x = 0.0;
         // particles[i].force_pili_y = 0.0;
        
     }
+
+double order_in_region_x = 0.0; 
+double order_in_region_y = 0.0; 
+// int neigh_in_region;
 
  for (int i = 0; i < N_particles; ++i) {
 Particle& pi = particles[i];
@@ -259,7 +273,7 @@ Particle& pi = particles[i];
                         // if (distanceSquared < CUTOFF * CUTOFF) { 
 
                         //     // ---- FORCE ---- // 
-                        //     pi.neighbors += 1;
+                            
                         //     double force=0.0;
                             
 
@@ -289,37 +303,66 @@ Particle& pi = particles[i];
                             
                         //     // std::cout << "Particle " << i << " interacts with Particle " << j << std::endl;
                         // }
-
+                        
+                        // double neigh_x = cos(pj.theta)
+                        // double neigh_y
                         if (distanceSquared < R*R){
+                            pi.neighbors += 1;
                             double Alignment =  sin(pj.theta - pi.theta);
                             pi.alignment += Alignment; 
                             pj.alignment -= Alignment; 
+                            
+                            // neigh_in_region++;
+                            order_in_region_x+= cos(pj.theta);
+                            order_in_region_y+= sin(pj.theta);
+                            if ((cos(pj.theta - pi.theta) < -0.9) & (cos(pj.theta - pi.theta) > -1.0)) {
+                                // std::cout << "particle " << i << " defector found = " << j << std::endl;
+                                pi.if_defector = 1;
+                                pi.defector = pj.theta;
+
+                            } else {pi.if_defector = -1;}
 
                         }
+                        
+
+                        
+                            
 
                         
 
                     
 
                     } // loop over particles j that intereact with i 
+                    order_in_region_x = order_in_region_x/pi.neighbors;
+                    order_in_region_y = order_in_region_y/pi.neighbors;
+                    pi.avg_ang_region = atan2(order_in_region_y,order_in_region_x);
                     j = linkedList[j];
                 } // loop over particles j that intereact with i 
             } // neighboring cells loop y
         } // neighboring cells loop x
 	
- }
+ } //loop over all particles
 
 
 }
-
+int time_aux = 0;
 double updatePositions(Particle* particles) {
    
     for (int i = 0; i < N_particles; ++i) {
         double rnd = dis(gen);
-        // std::cout <<"particle " << i << ", " << "rnd nbr = " << rnd << std::endl;
-        // std::cout <<"particle " << i << ", " << "angle before = " << particles[i].theta << std::endl;
-        particles[i].theta += particles[i].alignment*alig_str*Dt/particles[i].neighbors + eta*rnd*sqrt(Dt);
-    // std::cout <<"particle " << i << ", " << "angle after = " << particles[i].theta << std::endl;
+
+        double prod_avg;
+        prod_avg = cos(particles[i].avg_ang_region)*cos(particles[i].theta)+ sin(particles[i].avg_ang_region)*sin(particles[i].theta);
+        // std::cout<< "particle " << i << "-- > local order = " << prod_avg << std::endl;
+        // std::cout<< "particle " << i << "-- > if defector = " << particles[i].if_defector << std::endl;
+        if ( (prod_avg > 0.8)  & (particles[i].if_defector == 1)) {
+           
+            // std::cout << "TIME " << time_aux << " particle " << i << " -- ACTIVATED MINORITY RULE -- "  << std::endl;
+            particles[i].theta += sin(particles[i].defector - particles[i].theta)*alig_str*Dt + eta*rnd*sqrt(Dt);
+        } else {particles[i].theta += particles[i].alignment*alig_str*Dt/particles[i].neighbors + eta*rnd*sqrt(Dt);}
+
+        
+      
         particles[i].x += particles[i].fx*Dt + Vo*cos(particles[i].theta)*Dt;
         particles[i].y += particles[i].fy*Dt +  Vo*sin(particles[i].theta)*Dt;
         particles[i].aux_posx += particles[i].fx*Dt+ Vo*cos(particles[i].theta)*Dt;
@@ -334,18 +377,23 @@ double updatePositions(Particle* particles) {
     }
 
 
-    double dist=0.0;
+    // double dist=0.0;
     double aux_dist_x=0.0;
     double aux_dist_y=0.0;
     for (int f=0; f <N_particles; f++) {
-        aux_dist_x = particles[f].aux_posx - particles[f].ini_posx;
-        aux_dist_y = particles[f].aux_posy - particles[f].ini_posy;
-        aux_dist_x = aux_dist_x*aux_dist_x;
-        aux_dist_y = aux_dist_y*aux_dist_y;
-        dist += aux_dist_x + aux_dist_y;
+        // aux_dist_x = particles[f].aux_posx - particles[f].ini_posx;
+        // aux_dist_y = particles[f].aux_posy - particles[f].ini_posy;
+        // aux_dist_x = aux_dist_x*aux_dist_x;
+        // aux_dist_y = aux_dist_y*aux_dist_y;
+        // dist += aux_dist_x + aux_dist_y;
+        aux_dist_x += cos(particles[f].theta);
+        aux_dist_y += sin(particles[f].theta);
        
     }
-
+    aux_dist_x = aux_dist_x/N_particles;
+    aux_dist_y = aux_dist_y/N_particles;
+    double dist = sqrt(aux_dist_x*aux_dist_x + aux_dist_y*aux_dist_y);
+    time_aux++;
     return dist;
 
 }
@@ -414,7 +462,8 @@ int main() {
 
 
         double store_msd = updatePositions(particles);
-        sd << (t * Dt) << " " << store_msd / N_particles << "\n";
+        
+        sd << (t * Dt) << " " << store_msd << "\n";
 
             
 
