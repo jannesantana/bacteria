@@ -1,0 +1,2 @@
+On this directory, the distance to the nearest apoptotic cell correspond to all the trajectories (including front and back)!!
+
