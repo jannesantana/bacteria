@@ -13,6 +13,7 @@
 #include <fstream>
 #include <ctime>
 #include <random>
+#include <vector>
 #define PI 3.14159265358979323846
 
 // Constants and definitions 
@@ -306,11 +307,12 @@ Particle& pi = particles[i];
                         
                         // double neigh_x = cos(pj.theta)
                         // double neigh_y
+                        std::vector<double> tempArray;
                         if (distanceSquared < R*R){
                             pi.neighbors += 1;
                             double Alignment =  sin(pj.theta - pi.theta);
                             pi.alignment += Alignment; 
-                            pj.alignment -= Alignment; 
+                            // pj.alignment -= Alignment; 
                             
                             // neigh_in_region++;
                             order_in_region_x+= cos(pj.theta);
