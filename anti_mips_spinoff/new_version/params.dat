@@ -1,0 +1,11 @@
+box 20
+cutoff 1
+Nparticles 1
+Vo 10
+eta 0.1
+sigma 0.5
+R 1
+epsilon 0.1
+aligstr 1.1
+T 1000
+Dt 0.01

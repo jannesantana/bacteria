@@ -1,24 +1,56 @@
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
 #include <cmath>
+#include <map>
 #include <fstream>
 #include <random>
 #define PI 3.14159265358979323846
 
 // Constants and definitions 
-const double box = 10; // Size of the 2D box (assuming a square box)
-const double CUTOFF =4.0;    // Interaction cutoff distance
-const int N_particles = 200;  // Number of particles
-const int Cells = box / CUTOFF; // Number of cells per dimension
-int T = 1000;
-double Dt = 0.01; // Duration of each time step
+double box; // Size of the 2D box (assuming a square box)
+double CUTOFF;    // Interaction cutoff distance
+int N_particles;  // Number of particles
+int Cells = box / CUTOFF; // Number of cells per dimension
+int T ;
+double Dt ; // Duration of each time step
 double new_coord;
-const double k_spring=4.0; // spring constand
-const double rate=20.0; // extending rate 
-const double lo=0.8;
-const double epsilon = 1.0; //potential well
-const double sigma = 0.15;   // potential zero cutoff
+double k_spring; // spring constand
+double rate; // extending rate 
+double lo;
+double epsilon; //potential well
+double sigma;   // potential zero cutoff
 // const double sigma_radius=0.8;
+
+std::map<std::string, double> readParams(const std::string& filename) {
+    std::ifstream file(filename);
+    std::map<std::string, double> params;
+    std::string line, param_name;
+    double param_value;
+
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            if (!(iss >> param_name >> param_value)) { break; } // Error in line format
+            params[param_name] = param_value;
+        }
+        file.close();
+    } else {
+        std::cerr << "Unable to open parameter file: " << filename << std::endl;
+        exit(1);
+    }
+    return params;
+}
+
+std::string createFileName(const std::map<std::string, double>& params, const std::string& baseName) {
+    std::ostringstream oss;
+    oss << baseName;
+    for (const auto& param : params) {
+        oss << "_" << param.first << "_" << param.second;
+    }
+    oss << ".dat";
+    return oss.str();
+}
 
 // Particle structure
 struct Particle {
@@ -101,19 +133,15 @@ void initializeParticles(Particle* particles) {
     }
 }
 
+
+
 // save poisitons in file 
-void savePositions(const Particle* particles) { 
+void savePositions(const Particle* particles, const std::string& file_name) {
     std::ofstream file;
-   
-    file.open("particle_positions.dat", std::ios::app); // open the file 
-
-    // file << "Timestep " << timestep << "\n";
+    file.open(file_name, std::ios::app);
     for (int i = 0; i < N_particles; ++i) {
-        file << particles[i].x << " " << particles[i].y << " " << particles[i].xp << " " << particles[i].yp << "\n";
+        file << particles[i].x << " " << particles[i].y << " " << particles[i].theta << "\n";
     }
-
-    
-
     file.close();
 }
 
@@ -371,7 +399,40 @@ double updatePositions(Particle* particles) {
           
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <parameter_file>" << std::endl;
+        return 1;
+    }
+
+    std::string param_file = argv[1];
+    // gsl_rng * r = gsl_rng_alloc(gsl_rng_mt19937);
+    // gsl_rng_set(r, time(NULL));
+
+    std::map<std::string, double> params = readParams(param_file);
+
+
+    box = params["box"];
+    CUTOFF = params["cutoff"];
+    N_particles = static_cast<int>(params["Nparticles"]);
+    T = static_cast<int>(params["T"]);
+    Dt = params["Dt"];
+    epsilon = params["epsilon"];
+    k_spring= params["kspring"];
+    rate = params["rate"];
+    lo = params["lo"];
+    epsilon = params["epsilon"];
+    sigma = params["sigma"];
+
+    Cells = box / CUTOFF;
+
+    std::string positions_file_name = createFileName(params, "particle_positions");
+    std::string squared_disp_file_name = createFileName(params, "squared_disp");
+
+
+
+
     Particle* particles = (Particle*)malloc(N_particles * sizeof(Particle)); // use malloc to handle large arrays 
     int* head = (int*)malloc(Cells * Cells * sizeof(int));
     int* linkedList = (int*)malloc(N_particles * sizeof(int));
@@ -383,11 +444,12 @@ int main() {
     }
   
     initializeParticles(particles);
-        std::ofstream file("particle_positions.dat"); // Create a new file or overwrite if it already exists
-        file.close();
+    std::ofstream file(positions_file_name);  // Dynamic output file name for particle positions
+    file.close();   
     
+
     std::ofstream sd;
-    sd.open("squared_disp.dat");  
+    sd.open(squared_disp_file_name); 
 
     // sd.close();
         
@@ -412,7 +474,7 @@ int main() {
         sd << (t*Dt) << " " << store_msd/N_particles << "\n";
         
 
-        savePositions(particles);
+        savePositions(particles, positions_file_name);
         
     }
 
