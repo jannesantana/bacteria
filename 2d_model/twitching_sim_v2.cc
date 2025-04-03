@@ -1,3 +1,6 @@
+// c++ twitching_sim_v2.cc -o twitching_sim_2 
+// To compile Mac: c++ -Wall -I/opt/homebrew/Cellar/gsl/2.7.1/include/ -L/opt/homebrew/Cellar/gsl/2.7.1/lib/ twitching_sim_v2.cc cokus3.c -o twitching_sim_2 -lgsl -lgslcblas -lm
+
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
@@ -62,7 +65,7 @@ struct Particle {
     double A; //prob of extending 
     int cellIndex; // Cell index in the linked list
     double sd_t;
-    double prev_A;
+    double prev_A;  // previous time step probability of extending 
     double ini_posx, ini_posy;
     double aux_posx, aux_posy;
 };
@@ -106,16 +109,16 @@ int getCellIndex(double x, double y) {
 
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); 
-    std::uniform_real_distribution<> dis(0.0, 1.0);// Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> dis2(0.25, 0.75);// Standard mersenne_twister_engine seeded with rd()
+    std::normal_distribution<double> dis(0.0, 1.0);// Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> dis2(0.0,1.0);// Standard mersenne_twister_engine seeded with rd()
 
 // Function to initialize particles with random positions
 void initializeParticles(Particle* particles) {
     
     for (int i = 0; i < N_particles; ++i) {
 
-        particles[i].x = dis(gen) * box; // random initial consitions 
-        particles[i].y = dis(gen) * box;
+        particles[i].x = dis2(gen) * box; // random initial consitions 
+        particles[i].y = dis2(gen) * box;
 
         particles[i].theta = dis(gen) * 2 * PI;
         particles[i].xp = 0.0;
