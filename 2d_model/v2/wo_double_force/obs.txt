@@ -1,0 +1,1 @@
+In this folder, one can find the data corresponding to a version of the model in which there's no double the force when bacteria attach to each othe. 

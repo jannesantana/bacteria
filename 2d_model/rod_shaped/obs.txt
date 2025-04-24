@@ -1,0 +1,29 @@
+Here I try to simulate the rod-shaped version of the model in folder v2:
+
+-> rods_twitching.cc - code containing the simulation with nematic alignment
+-> rods_twitching_torque.cc - version of the code with torque
+-> runs_params.sh - to run the simulations; modify parameters as needed
+-> rods_tw_analysis.ipynb - Jupyter notebook with the data analysis 
+-> params.dat - store parameter values 
+
+particle_positions_... files columns: x y theta_b theta_p
+Theta_b = main axis angle
+theta_p = pili angle
+(x,y) = bacteria position
+
+In wrong_RNG:
+
+-> double_forcing (two kinds of repulsion)
+-> wrong_IC : overlapping initial conditions
+-> no_overlap_correction : allows for overlapping (not ideal)
+
+Nematic : with nematic alignment instead or torque (corresponds to rods_twitching.cc)
+
+diff_rate_def : refers to a different definition in the condition with the moving rate
+if (rate*Dt) ...
+This means the rate had to be changed along with Dt, which does not mean that it'a wrong, just that it's not ideal 
+But still with torque
+
+restrictive_angle: 
+Version of the model with absolute pili angle (wrong)
+

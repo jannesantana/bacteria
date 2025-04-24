@@ -1,0 +1,10 @@
+box 10
+cutoff 4
+Nparticles 200
+T 1000
+Dt 0.01
+kspring 4
+rate 20
+lo 0.8
+epsilon 1
+sigma 0.15
