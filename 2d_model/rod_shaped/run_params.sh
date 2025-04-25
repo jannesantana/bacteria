@@ -3,8 +3,8 @@
 # Define parameters as variables
 box=20
 cutoff=4
-Nparticles=1
-T=800
+Nparticles=200
+T=2000
 Dt=0.01
 rod_length=2
 rod_radius=0.2
@@ -12,7 +12,7 @@ khardcore=0
 kspring=2
 rate=0.3
 lo=10
-kalign=12
+kalign=8
 
 # Create folder name based on parameters
 folder_name="Dt_${Dt}_Nparticles_${Nparticles}_T_${T}_box_${box}_cutoff_${cutoff}_kalign_${kalign}_khardcore_${khardcore}_kspring_${kspring}_lo_${lo}_rate_${rate}_rod_length_${rod_length}_rod_radius_${rod_radius}"

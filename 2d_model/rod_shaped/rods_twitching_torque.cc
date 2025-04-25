@@ -25,6 +25,7 @@ double L,R;  // rod length and half width
 double k_hard; // strength of hardcore repulsion
 double torque = 0.5;
 double kalign; // torque applied to overlapping rods
+int tSave = 10;
 // const double sigma_radius=0.8;
 
 std::map<std::string, double> readParams(const std::string& filename) {
@@ -602,8 +603,12 @@ int main(int argc, char* argv[]) {
         // std:: cout << store_msd << "\n";
         sd << (t*Dt) << " " << store_msd/N_particles << "\n";
         
+        if (t % tSave == 0) {
+            std::cout << "Saving positions at time step " << t << std::endl;
+        
 
         savePositions(particles, positions_file_name);
+        }
         
     }
 
