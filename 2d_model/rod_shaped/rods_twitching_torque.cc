@@ -1,4 +1,4 @@
-// c++ rods_twitching_torque.cc -o twitching_sim_2 
+// c++ rods_twitching_torque.cc -o rods_twitch_sim_torque 
 // To compile Mac: clang++ -std=c++17 -stdlib=libc++ rods_twitching_torque.cc -o rods_twitch_sim_torque
 
 #include <iostream>
