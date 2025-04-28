@@ -10,3 +10,15 @@ rod_length 2
 khardcore 0
 rod_radius 0.2
 kalign 11
+box 20
+cutoff 4
+Nparticles 80
+T 800
+Dt 0.01
+kspring 2
+rate 0.3
+lo 10
+rod_length 2
+khardcore 0
+rod_radius 0.2
+kalign 11
