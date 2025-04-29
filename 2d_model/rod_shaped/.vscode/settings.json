@@ -51,7 +51,8 @@
         "stack": "cpp",
         "unordered_map": "cpp",
         "variant": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "random": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }

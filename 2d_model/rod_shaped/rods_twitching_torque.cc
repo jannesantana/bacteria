@@ -25,7 +25,7 @@ double L,R;  // rod length and half width
 double k_hard; // strength of hardcore repulsion
 double torque = 0.5;
 double kalign; // torque applied to overlapping rods
-int tSave = 10;
+int tSave = 10; //save every tSave time steps
 // const double sigma_radius=0.8;
 
 std::map<std::string, double> readParams(const std::string& filename) {
@@ -83,44 +83,54 @@ void shortestSegmentSegment(
     Vector2 d1 = Q1 - P1;
     Vector2 d2 = Q2 - P2;
     Vector2 r  = P1 - P2;
-    double a = dot(d1,d1);
-    double e = dot(d2,d2);
-    double f = dot(d2,r);
+    double a = dot(d1,d1); //magnitude of segment 1
+    double e = dot(d2,d2); //magnitude of segment 2
+    double f = dot(d2,r); // projection segment 2 on the vector between the origins of the segments
 
     const double EPS = 1e-12;
     double s = 0, t = 0;
 
+// Check if either or both segments degenerate into points
     if (a <= EPS && e <= EPS) {
         // both segments degenerate to points
-        outP = P1;
-        outQ = P2;
+        outP = P1; //point on 1
+        outQ = P2; //point on 2
     }
     else if (a <= EPS) {
         // first segment is a point
         s = 0;
-        t = clamp(f/e, 0.0, 1.0);
+        t = clamp(f/e, 0.0, 1.0); // s = 0 => t = (b*s + f) / e = f / e
         outP = P1;
         outQ = P2 + d2 * t;
     }
     else if (e <= EPS) {
         // second segment is a point
         t = 0;
-        s = clamp(-dot(d1,r)/a, 0.0, 1.0);
+        s = clamp(-dot(d1,r)/a, 0.0, 1.0); // t = 0 => s = (b*t - c) / a = -c / a, c = dot(d1,r)
         outP = P1 + d1 * s;
         outQ = P2;
     }
     else {
+        // The general nondegenerate case starts here
         double b = dot(d1,d2);
         double c = dot(d1,r);
         double denom = a*e - b*b;
+
+        // If segments not parallel, compute closest point on 1 to 2 and
+            // clamp to segment 11. Else pick arbitrary s (here 0)
 
         // find s on [0,1]
         if (denom != 0.0)
             s = clamp((b*f - c*e)/denom, 0.0, 1.0);
         else
             s = 0.0;
+            // Compute point on segment 2 closest to segment 1 using
+            // t = Dot((P1 + D1*s) - P2,D2) / Dot(D2,D2) = (b*s + f) / e
 
         // find t on [0,1]
+        // if t not in [0,1], clamp t, recompute s for the new value
+        // of t using s = Dot((P2 + D2*t) - P1,D1) / Dot(D1,D1)= (t*b - c) / a
+        // and clamp s to [0, 1]
         t = (b*s + f) / e;
         if (t < 0.0)       { t = 0.0; s = clamp(-c/a,        0.0, 1.0); }
         else if (t > 1.0)  { t = 1.0; s = clamp((b-c)/a,     0.0, 1.0); }
@@ -148,8 +158,10 @@ struct Particle {
     double xp,yp;// pili
     double A; //prob of extending 
     int cellIndex; // Cell index in the linked list
-    double sd_t;
+    double sd_t; // mean square displacement 
     double prev_A;  // previous time step probability of extending 
+    int moving; // number of consecutive moving steps
+    
     double ini_posx, ini_posy;
     double aux_posx, aux_posy;
 };
@@ -228,6 +240,8 @@ void initializeParticles(Particle* particles) {
         particles[idx].aux_posx=0.0;
         particles[idx].aux_posy=0.0;
         particles[idx].theta_b = dis(gen) * 2 * PI;
+        particles[idx].moving = 0;
+       
         
         particles[idx].cellIndex = getCellIndex(particles[idx].x, particles[idx].y);
         ++idx;
@@ -391,10 +405,12 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
         particles[i].fy = 0.0;
         particles[i].force_pili_x = 0.0;
         particles[i].force_pili_y = 0.0;
+        
        
     }
 
     for (int i = 0; i < N_particles; ++i) {
+        
 
         particles[i].prev_A = particles[i].A;
 
@@ -407,6 +423,8 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
         // std::cout << "A = " << particles[i].A << "\n";
         
         if ( (particles[i].A <= rate)  & (particles[i].prev_A < rate)) {
+            particles[i].moving = 1;
+          
             // move and keep angle
             // std::cout << "MOVE +  KEEP THETA" << "\n";
             particles[i].theta_p = particles[i].theta_p;
@@ -423,17 +441,9 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             
         }
         else if ( (particles[i].A <= rate) & (particles[i].prev_A > rate) ) {
-
-            // std::cout << "MOVE + NOT KEEP THETA" << "\n";
+            particles[i].moving=1;
             
-            // if ( dis2(gen) < 0.6) {
-            //     // std::cout << "FORWARDS" << "\n";
-            //     particles[i].theta_p = ang(gen);
-            // }
-            // else {
-            //     // std::cout << "REVERSAL" << "\n";
-            //     particles[i].theta_p = ang2(gen);
-            // }
+            
             //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
             bool forward = (dis2(gen) < 0.6);
             // small jitter ±alpha:
@@ -455,6 +465,8 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
         }
         else if (particles[i].A > rate) {
+            
+            particles[i].moving = 0;
             // std::cout << "NOT MOVE" << "\n";
             particles[i].theta_p = particles[i].theta_p;
             
@@ -474,12 +486,8 @@ double updatePositions(Particle* particles) {
    
     for (int i = 0; i < N_particles; ++i) {
     
-
-        // std::cout << "fx = "<< particles[i].fx * Dt << ", " << "fy = " << particles[i].fy * Dt << std::endl;
-        // std::cout << "fx pili = " << particles[i].force_pili_x * Dt << ", " << "fy pili = " << particles[i].force_pili_y * Dt << std::endl;
-        // std::cout << "pos before update = " << particles[i].x << ", " << particles[i].y << std::endl;
         particles[i].x +=particles[i].force_pili_x * Dt; 
-        // std::cout << "pos after update = " << particles[i].x << ", " << particles[i].y << std::endl;
+
         particles[i].y += particles[i].force_pili_y * Dt; 
         particles[i].aux_posx += particles[i].force_pili_x * Dt;
         particles[i].aux_posy += particles[i].force_pili_y * Dt;
@@ -489,8 +497,6 @@ double updatePositions(Particle* particles) {
         particles[i].theta_b = applyPBCangle(particles[i].theta_b);
         particles[i].theta_p = applyPBCangle(particles[i].theta_p);
 
-
-        // Update cell index
         particles[i].cellIndex = getCellIndex(particles[i].x, particles[i].y); // update cell index 
 
     }
@@ -522,8 +528,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::string param_file = argv[1];
-    // gsl_rng * r = gsl_rng_alloc(gsl_rng_mt19937);
-    // gsl_rng_set(r, time(NULL));
+ 
 
     std::map<std::string, double> params = readParams(param_file);
 
@@ -548,6 +553,7 @@ int main(int argc, char* argv[]) {
 
     std::string positions_file_name = createFileName(params, "particle_positions");
     std::string squared_disp_file_name = createFileName(params, "squared_disp");
+    std::string moving_not_moving_file_name = createFileName(params,"moving_not_moving");
 
 
 
@@ -570,8 +576,13 @@ int main(int argc, char* argv[]) {
     std::ofstream sd;
     sd.open(squared_disp_file_name); 
 
+    std::ofstream mv;
+    mv.open(moving_not_moving_file_name);
+
+
+
     // sd.close();
-        
+    mv << "# +1 = moving, 0 = not moving" << "\n";
     for (int t = 0; t < T; ++t) {
        std::cout << "---------------------" << "\n" << "time= " << t << std::endl << "\n";
         
@@ -588,6 +599,7 @@ int main(int argc, char* argv[]) {
         double store_msd = updatePositions(particles);
 
         for(int i=0; i<N_particles; ++i) {
+            mv << particles[i].moving << "\n";
             // apply alignment between rod's body axis and pillus angle ONLY when in the moving state
             if (particles[i].A <= rate) {
                 double align = sin(particles[i].theta_p - particles[i].theta_b);
@@ -603,6 +615,7 @@ int main(int argc, char* argv[]) {
         // std:: cout << store_msd << "\n";
         sd << (t*Dt) << " " << store_msd/N_particles << "\n";
         
+        
         if (t % tSave == 0) {
             std::cout << "Saving positions at time step " << t << std::endl;
         
@@ -616,5 +629,6 @@ int main(int argc, char* argv[]) {
     free(head);
     free(linkedList);
     sd.close();
+    mv.close();
     return 0;
 }
