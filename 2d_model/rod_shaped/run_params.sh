@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define parameters as variables
-box=50
+box=20
 cutoff=4
-Nparticles=500
+Nparticles=100
 T=5000
 Dt=0.01
 rod_length=2

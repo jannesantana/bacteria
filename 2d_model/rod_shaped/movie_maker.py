@@ -90,16 +90,16 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE,
         for time in range(T0, Tf):
             os.remove(f"{folder_name}/positions_{time:03d}.png")
 
-box=50
+box=20
 cutoff=4
-Nparticles=600
+Nparticles=100
 T=5000
 Dt=0.01
 rod_length=2
 rod_radius=0.2
 khardcore=0
 kspring=3
-rate=0.1
+rate=0.3
 lo=5
 kalign=11
 

@@ -207,8 +207,8 @@ int getCellIndex(double x, double y) {
     std::mt19937 gen(rd()); 
     std::normal_distribution<double> dis(0.0, 1.0);// Standard mersenne_twister_engine seeded with rd()
     std::uniform_real_distribution<> dis2(0.0,1.0);// Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> ang(PI*0.25,3*PI*0.25);// Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> ang2(5*PI*0.25,7*PI*0.25);// Standard mersenne_twister_engine seeded with rd()
+    // std::uniform_real_distribution<> ang(PI*0.25,3*PI*0.25);// Standard mersenne_twister_engine seeded with rd()
+    // std::uniform_real_distribution<> ang2(5*PI*0.25,7*PI*0.25);// Standard mersenne_twister_engine seeded with rd()
 
 // Function to initialize particles with random positions
 void initializeParticles(Particle* particles) {
@@ -227,7 +227,7 @@ void initializeParticles(Particle* particles) {
         // double theta = dis(gen)*2*PI;
         particles[idx].x = applyPBC(x);
         particles[idx].y = applyPBC(y);
-        particles[idx].theta_p = dis(gen) * 2 * PI;
+        particles[idx].theta_p = dis2(gen) * 2 * PI;
         particles[idx].xp = 0.0;
         particles[idx].yp  =0.0;
         particles[idx].A = 0.0;
@@ -239,7 +239,7 @@ void initializeParticles(Particle* particles) {
         particles[idx].ini_posy = 0.0;
         particles[idx].aux_posx=0.0;
         particles[idx].aux_posy=0.0;
-        particles[idx].theta_b = dis(gen) * 2 * PI;
+        particles[idx].theta_b = dis2(gen) * 2 * PI;
         particles[idx].moving = 0;
        
         
@@ -357,7 +357,7 @@ std::vector<Vector2> A(N_particles), B(N_particles);
                             n = Vector2{cx/cdist, cy/cdist};
                         } else {
                             // completely coincident: pick a random direction
-                            double angle = dis(gen) * 2 * PI;  
+                            double angle = dis2(gen) * 2 * PI;  
                             n = Vector2{std::cos(angle), std::sin(angle)};
                         }
                     }
@@ -420,60 +420,85 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
         particles[i].A = dis2(gen);
 
+        if (particles[i].A <= rate) {
+            double alpha = 0.3;
+            double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
+
+            if (particles[i].prev_A > rate) {
+                // fresh extension: forward or reverse
+                if (dis2(gen) < 0.6)
+                  particles[i].theta_p = particles[i].theta_b + dtheta;
+                else
+                  particles[i].theta_p = particles[i].theta_b + PI + dtheta;
+              } else {
+                // continuing extension: still jitter about body axis
+                particles[i].theta_p = particles[i].theta_b + dtheta;
+              }
+            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
+            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
+            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+
+
+            } else {
+                particles[i].force_pili_x = particles[i].force_pili_y = 0;
+            }
+
+
         // std::cout << "A = " << particles[i].A << "\n";
         
-        if ( (particles[i].A <= rate)  & (particles[i].prev_A < rate)) {
-            particles[i].moving = 1;
+        // if ( (particles[i].A <= rate)  & (particles[i].prev_A < rate)) {
+        //     particles[i].moving = 1;
           
-            // move and keep angle
-            // std::cout << "MOVE +  KEEP THETA" << "\n";
-            particles[i].theta_p = particles[i].theta_p;
-            // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
-            // particles[i].theta_b = particles[i].theta_p;
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
+        //     // move and keep angle
+        //     // std::cout << "MOVE +  KEEP THETA" << "\n";
+        //     particles[i].theta_p = particles[i].theta_p;
+        //     // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
+        //     // particles[i].theta_b = particles[i].theta_p;
+        //     particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
+        //     particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
            
         
-            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+        //     particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+        //     particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
        
 
             
-        }
-        else if ( (particles[i].A <= rate) & (particles[i].prev_A > rate) ) {
-            particles[i].moving=1;
+        // }
+        // else if ( (particles[i].A <= rate) & (particles[i].prev_A > rate) ) {
+        //     particles[i].moving=1;
             
             
-            //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
-            bool forward = (dis2(gen) < 0.6);
-            // small jitter ±alpha:
-            double alpha = 0.3;  // adjust to taste
-            double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
-            if (forward) {
-                particles[i].theta_p = particles[i].theta_b + dtheta;
-            } else {
-                particles[i].theta_p = particles[i].theta_b + PI + dtheta;
-            }
-            particles[i].theta_p = applyPBCangle(particles[i].theta_p);
+        //     //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
+        //     bool forward = (dis2(gen) < 0.6);
+        //     // small jitter ±alpha:
+        //     double alpha = 0.3;  // adjust to taste
+        //     double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
+        //     if (forward) {
+        //         particles[i].theta_p = particles[i].theta_b + dtheta;
+        //     } else {
+        //         particles[i].theta_p = particles[i].theta_b + PI + dtheta;
+        //     }
+        //     particles[i].theta_p = applyPBCangle(particles[i].theta_p);
        
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
+        //     particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
+        //     particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
            
         
-            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+        //     particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+        //     particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
 
-        }
-        else if (particles[i].A > rate) {
+        // }
+        // else if (particles[i].A > rate) {
             
-            particles[i].moving = 0;
-            // std::cout << "NOT MOVE" << "\n";
-            particles[i].theta_p = particles[i].theta_p;
+        //     particles[i].moving = 0;
+        //     // std::cout << "NOT MOVE" << "\n";
+        //     particles[i].theta_p = particles[i].theta_p;
             
-            particles[i].force_pili_x = 0.0;
-            particles[i].force_pili_y= 0.0;
+        //     particles[i].force_pili_x = 0.0;
+        //     particles[i].force_pili_y= 0.0;
         
-        }
+        // }
 
 
         
@@ -567,6 +592,18 @@ int main(int argc, char* argv[]) {
         std::cerr << "Memory allocation failed" << std::endl;
         return -1;
     }
+
+    // std::vector<double> prevX(N_particles), prevY(N_particles);
+// initialize prevX/Y to the t=0 positions
+    
+    // std::ofstream preVel("velocity_pre.dat");
+    // preVel << "# time  id  vx_pre  vy_pre  v_pre\n";
+
+    std::vector<double> postX(N_particles), postY(N_particles);
+// initialize prevX/Y to the t=0 positions
+    
+    std::ofstream postVel("velocity_post.dat");
+    postVel << "# time  id  vx_post  vy_post  v_post\n";
   
     initializeParticles(particles);
     std::ofstream file(positions_file_name);  // Dynamic output file name for particle positions
@@ -579,12 +616,17 @@ int main(int argc, char* argv[]) {
     std::ofstream mv;
     mv.open(moving_not_moving_file_name);
 
-
+    for(int i=0; i<N_particles; ++i){
+        postX[i] = particles[i].x;
+        postY[i] = particles[i].y;
+    }
+       
 
     // sd.close();
     mv << "# +1 = moving, 0 = not moving" << "\n";
     for (int t = 0; t < T; ++t) {
        std::cout << "---------------------" << "\n" << "time= " << t << std::endl << "\n";
+
         
   
         buildLinkedList(particles, head, linkedList);
@@ -608,7 +650,58 @@ int main(int argc, char* argv[]) {
             }
         }
 
+     
+    //     for(int i=0; i<N_particles; ++i){
+    //         double dx = particles[i].x - prevX[i];
+    //         double dy = particles[i].y - prevY[i];
+            
+    //         dx = (dx + box/2) - floor((dx + box/2)/box)*box - box/2;
+    //         dy = (dy + box/2) - floor((dy + box/2)/box)*box - box/2;
+
+    //         double vx_pre = dx / Dt;
+    //         double vy_pre = dy / Dt;
+
+    //         double v_pre = std::sqrt(vx_pre*vx_pre + vy_pre*vy_pre);
+
+    //         preVel 
+    //         << t*Dt << " " 
+    //         << i    << " "
+    //         << vx_pre << " "
+    //         << vy_pre << " "
+    //         << v_pre  << "\n";
+
+    //         prevX[i] = particles[i].x;
+    //         prevY[i] = particles[i].y;
+
+    //   }
+
+
+
         resolveOverlaps(particles, head, linkedList);
+
+            for(int i=0; i<N_particles; ++i){
+            double dx = particles[i].x - postX[i];
+            double dy = particles[i].y - postY[i];
+            
+            dx = (dx + box/2) - floor((dx + box/2)/box)*box - box/2;
+            dy = (dy + box/2) - floor((dy + box/2)/box)*box - box/2;
+
+            double vx_post = dx / Dt;
+            double vy_post = dy / Dt;
+
+            double v_post = std::sqrt(vx_post*vx_post + vy_post*vy_post);
+
+            postVel 
+            << t*Dt << " " 
+            << i    << " "
+            << vx_post << " "
+            << vy_post << " "
+            << v_post  << "\n";
+
+            postX[i] = particles[i].x;
+            postY[i] = particles[i].y;
+
+      }
 
             
 
