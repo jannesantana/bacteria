@@ -30,3 +30,6 @@ Version of the model with absolute pili angle (wrong)
 
 movie_maker.py: creates the movies (faster version)
 
+no_noise_in_pili: data without gaussian noise added to pili positions!!
+
+

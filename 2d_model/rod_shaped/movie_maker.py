@@ -79,7 +79,7 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE,
     # Make movie if requested
     if make_ffmpeg_movie:
         subprocess.run([
-            "ffmpeg", "-y", "-r", "12", "-start_number", f"{Tstart:03d}",
+            "ffmpeg", "-y", "-r", "10", "-start_number", f"{Tstart:03d}",
             "-i", f"{folder_name}/positions_%03d.png",
             "-vf", "crop=trunc(iw/2)*2:trunc(ih/2)*2",
             "-pix_fmt", "yuv420p", f"{folder_name}/movie.mp4"
@@ -90,17 +90,17 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE,
         for time in range(T0, Tf):
             os.remove(f"{folder_name}/positions_{time:03d}.png")
 
-box=20
+box=30
 cutoff=4
-Nparticles=100
-T=5000
+Nparticles=200
+T=2000
 Dt=0.01
 rod_length=2
 rod_radius=0.2
 khardcore=0
 kspring=3
 rate=0.3
-lo=5
+lo=3
 kalign=11
 
 folder_name=f"Dt_{Dt}_Nparticles_{Nparticles}_T_{T}_box_{box}_cutoff_{cutoff}_kalign_{kalign}_khardcore_{khardcore}_kspring_{kspring}_lo_{lo}_rate_{rate}_rod_length_{rod_length}_rod_radius_{rod_radius}"

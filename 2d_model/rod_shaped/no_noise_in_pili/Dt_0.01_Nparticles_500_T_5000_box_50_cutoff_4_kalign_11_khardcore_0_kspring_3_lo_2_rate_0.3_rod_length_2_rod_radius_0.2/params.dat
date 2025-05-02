@@ -1,0 +1,12 @@
+box 50
+cutoff 4
+Nparticles 500
+T 5000
+Dt 0.01
+kspring 3
+rate 0.3
+lo 2
+rod_length 2
+khardcore 0
+rod_radius 0.2
+kalign 11

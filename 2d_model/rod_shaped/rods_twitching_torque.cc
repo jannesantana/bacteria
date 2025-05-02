@@ -420,85 +420,86 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
         particles[i].A = dis2(gen);
 
-        if (particles[i].A <= rate) {
-            double alpha = 0.3;
-            double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
+        // if (particles[i].A <= rate) {
+        //     double alpha = 0.3;
+        //     double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
 
-            if (particles[i].prev_A > rate) {
-                // fresh extension: forward or reverse
-                if (dis2(gen) < 0.6)
-                  particles[i].theta_p = particles[i].theta_b + dtheta;
-                else
-                  particles[i].theta_p = particles[i].theta_b + PI + dtheta;
-              } else {
-                // continuing extension: still jitter about body axis
-                particles[i].theta_p = particles[i].theta_b + dtheta;
-              }
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
-            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+        //     if (particles[i].prev_A > rate) {
+        //         // fresh extension: forward or reverse
+        //         if (dis2(gen) < 0.6)
+        //           particles[i].theta_p = particles[i].theta_b + dtheta;
+        //         else
+        //           particles[i].theta_p = particles[i].theta_b + PI + dtheta;
+        //       } else {
+        //         // continuing extension: still jitter about body axis
+        //         particles[i].theta_p = particles[i].theta_b + dtheta;
+        //       }
+        //     particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
+        //     particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
+        //     particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+        //     particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
 
 
-            } else {
-                particles[i].force_pili_x = particles[i].force_pili_y = 0;
-            }
+        //     } else {
+        //         particles[i].force_pili_x = particles[i].force_pili_y = 0;
+        //     }
 
 
         // std::cout << "A = " << particles[i].A << "\n";
         
-        // if ( (particles[i].A <= rate)  & (particles[i].prev_A < rate)) {
-        //     particles[i].moving = 1;
+        if ( (particles[i].A <= rate)  && (particles[i].prev_A < rate)) {
+            particles[i].moving = 1;
+            double noise = dis(gen)/sqrt(Dt);
           
-        //     // move and keep angle
-        //     // std::cout << "MOVE +  KEEP THETA" << "\n";
-        //     particles[i].theta_p = particles[i].theta_p;
-        //     // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
-        //     // particles[i].theta_b = particles[i].theta_p;
-        //     particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
-        //     particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
+            // move and keep angle
+            // std::cout << "MOVE +  KEEP THETA" << "\n";
+            particles[i].theta_p = particles[i].theta_p;
+            // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
+            // particles[i].theta_b = particles[i].theta_p;
+            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) + 0.2*noise;
+            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) + 0.2*noise;
            
         
-        //     particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-        //     particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
        
 
             
-        // }
-        // else if ( (particles[i].A <= rate) & (particles[i].prev_A > rate) ) {
-        //     particles[i].moving=1;
+        }
+        else if ( (particles[i].A <= rate) && (particles[i].prev_A > rate) ) {
+            particles[i].moving=1;
+            double noise = dis(gen)/sqrt(Dt);
             
-            
-        //     //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
-        //     bool forward = (dis2(gen) < 0.6);
-        //     // small jitter ±alpha:
-        //     double alpha = 0.3;  // adjust to taste
-        //     double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
-        //     if (forward) {
-        //         particles[i].theta_p = particles[i].theta_b + dtheta;
-        //     } else {
-        //         particles[i].theta_p = particles[i].theta_b + PI + dtheta;
-        //     }
-        //     particles[i].theta_p = applyPBCangle(particles[i].theta_p);
+            //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
+            bool forward = (dis2(gen) < 0.6);
+            // small jitter ±alpha:
+            double alpha = 0.3;  // adjust to taste
+            double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
+            if (forward) {
+                particles[i].theta_p = particles[i].theta_b + dtheta;
+            } else {
+                particles[i].theta_p = particles[i].theta_b + PI + dtheta;
+            }
+            particles[i].theta_p = applyPBCangle(particles[i].theta_p);
        
-        //     particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
-        //     particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
+            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p)+ 0.2*noise;
+            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p)+ 0.2*noise;
            
         
-        //     particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-        //     particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
 
-        // }
-        // else if (particles[i].A > rate) {
+        }
+        else if (particles[i].A > rate) {
             
-        //     particles[i].moving = 0;
-        //     // std::cout << "NOT MOVE" << "\n";
-        //     particles[i].theta_p = particles[i].theta_p;
+            particles[i].moving = 0;
+            // std::cout << "NOT MOVE" << "\n";
+            particles[i].theta_p = particles[i].theta_p;
             
-        //     particles[i].force_pili_x = 0.0;
-        //     particles[i].force_pili_y= 0.0;
+            particles[i].force_pili_x = 0.0;
+            particles[i].force_pili_y= 0.0;
         
-        // }
+        }
 
 
         
@@ -603,7 +604,7 @@ int main(int argc, char* argv[]) {
 // initialize prevX/Y to the t=0 positions
     
     std::ofstream postVel("velocity_post.dat");
-    postVel << "# time  id  vx_post  vy_post  v_post\n";
+    postVel << "#vx_post  vy_post  v_post\n";
   
     initializeParticles(particles);
     std::ofstream file(positions_file_name);  // Dynamic output file name for particle positions
@@ -692,8 +693,6 @@ int main(int argc, char* argv[]) {
             double v_post = std::sqrt(vx_post*vx_post + vy_post*vy_post);
 
             postVel 
-            << t*Dt << " " 
-            << i    << " "
             << vx_post << " "
             << vy_post << " "
             << v_post  << "\n";
