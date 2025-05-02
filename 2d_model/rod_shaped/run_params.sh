@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # Define parameters as variables
-box=30
+box=15
 cutoff=4
-Nparticles=202
-T=2000
+Nparticles=50
+T=200
 Dt=0.01
 rod_length=2
 rod_radius=0.2
 khardcore=0
 kspring=3
-rate=0.3
-lo=3
-kalign=11
+rate=0.1
+lo=2
+kalign=5
 
 # Create folder name based on parameters
 folder_name="Dt_${Dt}_Nparticles_${Nparticles}_T_${T}_box_${box}_cutoff_${cutoff}_kalign_${kalign}_khardcore_${khardcore}_kspring_${kspring}_lo_${lo}_rate_${rate}_rod_length_${rod_length}_rod_radius_${rod_radius}"
