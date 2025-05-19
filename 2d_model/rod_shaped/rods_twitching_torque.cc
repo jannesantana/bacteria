@@ -25,7 +25,10 @@ double L,R;  // rod length and half width
 double k_hard; // strength of hardcore repulsion
 double torque = 0.5;
 double kalign; // torque applied to overlapping rods
-int tSave = 10; //save every tSave time steps
+int tSave_pos = 10; //save every tSave time steps
+int tSave_vel = 1;
+int tSave_msd = 1;
+double noise_strength = 0.1; // pillus position noise
 // const double sigma_radius=0.8;
 
 std::map<std::string, double> readParams(const std::string& filename) {
@@ -161,7 +164,7 @@ struct Particle {
     double sd_t; // mean square displacement 
     double prev_A;  // previous time step probability of extending 
     int moving; // number of consecutive moving steps
-    
+    double rsqrd; // squared displacement
     double ini_posx, ini_posy;
     double aux_posx, aux_posy;
 };
@@ -202,6 +205,7 @@ int getCellIndex(double x, double y) {
     
 }
 
+// random number generators
 
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); 
@@ -241,6 +245,7 @@ void initializeParticles(Particle* particles) {
         particles[idx].aux_posy=0.0;
         particles[idx].theta_b = dis2(gen) * 2 * PI;
         particles[idx].moving = 0;
+        particles[idx].rsqrd = 0.0;
        
         
         particles[idx].cellIndex = getCellIndex(particles[idx].x, particles[idx].y);
@@ -456,8 +461,8 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             particles[i].theta_p = particles[i].theta_p;
             // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
             // particles[i].theta_b = particles[i].theta_p;
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) + 0.2*noise;
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) + 0.2*noise;
+            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) + noise*noise_strength;
+            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) + noise*noise_strength;
            
         
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
@@ -482,8 +487,8 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             }
             particles[i].theta_p = applyPBCangle(particles[i].theta_p);
        
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p)+ 0.2*noise;
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p)+ 0.2*noise;
+            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p)+ noise*noise_strength;;
+            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p)+ noise*noise_strength;;
            
         
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
@@ -511,10 +516,11 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 double updatePositions(Particle* particles) {
    
     for (int i = 0; i < N_particles; ++i) {
+        // double noise = dis(gen)*sqrt(Dt);
     
-        particles[i].x +=particles[i].force_pili_x * Dt; 
+        particles[i].x +=particles[i].force_pili_x * Dt ; 
 
-        particles[i].y += particles[i].force_pili_y * Dt; 
+        particles[i].y += particles[i].force_pili_y * Dt;
         particles[i].aux_posx += particles[i].force_pili_x * Dt;
         particles[i].aux_posy += particles[i].force_pili_y * Dt;
       
@@ -533,10 +539,12 @@ double updatePositions(Particle* particles) {
     double aux_dist_x=0.0;
     double aux_dist_y=0.0;
     for (int f=0; f <N_particles; f++) {
+        
         aux_dist_x = particles[f].aux_posx - particles[f].ini_posx;
         aux_dist_y = particles[f].aux_posy - particles[f].ini_posy;
         aux_dist_x = aux_dist_x*aux_dist_x;
         aux_dist_y = aux_dist_y*aux_dist_y;
+        particles[f].rsqrd = aux_dist_x + aux_dist_y;
         dist += aux_dist_x + aux_dist_y;
        
     }
@@ -580,6 +588,7 @@ int main(int argc, char* argv[]) {
     std::string positions_file_name = createFileName(params, "particle_positions");
     std::string squared_disp_file_name = createFileName(params, "squared_disp");
     std::string moving_not_moving_file_name = createFileName(params,"moving_not_moving");
+    std::string squared_disp_single_file_name = createFileName(params,"squared_disp_single");
 
 
 
@@ -616,6 +625,9 @@ int main(int argc, char* argv[]) {
 
     std::ofstream mv;
     mv.open(moving_not_moving_file_name);
+
+    std::ofstream squared_disp_single;
+    squared_disp_single.open(squared_disp_single_file_name);
 
     for(int i=0; i<N_particles; ++i){
         postX[i] = particles[i].x;
@@ -687,18 +699,25 @@ int main(int argc, char* argv[]) {
             dx = (dx + box/2) - floor((dx + box/2)/box)*box - box/2;
             dy = (dy + box/2) - floor((dy + box/2)/box)*box - box/2;
 
+
+    
+
             double vx_post = dx / Dt;
             double vy_post = dy / Dt;
 
             double v_post = std::sqrt(vx_post*vx_post + vy_post*vy_post);
-
+            if (t % tSave_vel == 0) {
             postVel 
             << vx_post << " "
             << vy_post << " "
-            << v_post  << "\n";
+            << v_post  << "\n";}
 
             postX[i] = particles[i].x;
             postY[i] = particles[i].y;
+
+            if (t % tSave_msd == 0) {
+                squared_disp_single << particles[i].rsqrd << "\n";
+            }
 
       }
 
@@ -708,11 +727,12 @@ int main(int argc, char* argv[]) {
         sd << (t*Dt) << " " << store_msd/N_particles << "\n";
         
         
-        if (t % tSave == 0) {
+        if (t % tSave_pos == 0) {
             std::cout << "Saving positions at time step " << t << std::endl;
         
 
         savePositions(particles, positions_file_name);
+
         }
         
     }
@@ -722,5 +742,7 @@ int main(int argc, char* argv[]) {
     free(linkedList);
     sd.close();
     mv.close();
+    squared_disp_single.close();
+    postVel.close();
     return 0;
 }
