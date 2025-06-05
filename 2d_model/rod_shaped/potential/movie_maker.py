@@ -20,9 +20,9 @@ import os
 import subprocess
 from tqdm import tqdm
 
-def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE, 
+def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE, step,
                          ROD_LENGTH=0.6, ROD_WIDTH=0.1, 
-                         make_ffmpeg_movie=False, Tstart=0, del_pngs=False):
+                         make_ffmpeg_movie=False, del_pngs=False):
     
     os.makedirs(folder_name, exist_ok=True)  # Ensure folder exists
 
@@ -55,7 +55,8 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE,
     plt.tight_layout()
 
     # Loop over frames
-    for time in tqdm(range(T0, Tf), desc="Generating frames"):
+    count = 0
+    for time in tqdm(range(T0, Tf,step), desc="Generating frames"):
         Xnow, Ynow, Thetanow = X[time], Y[time], Theta[time]
         ux, uy = np.cos(Thetanow), np.sin(Thetanow)
 
@@ -72,14 +73,15 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE,
             cap2.center = cap2_center
 
         ax.set_title(f'Time {time}', fontsize=12, loc='left')
-        fig.savefig(f"{folder_name}/positions_{time:03d}.png", dpi=200, bbox_inches='tight')
+        fig.savefig(f"{folder_name}/positions_{count:03d}.png", dpi=200, bbox_inches='tight')
+        count +=1
 
     plt.close(fig)
 
     # Make movie if requested
     if make_ffmpeg_movie:
         subprocess.run([
-            "ffmpeg", "-y", "-r", "40", "-start_number", f"{Tstart:03d}",
+            "ffmpeg", "-y", "-r", "40", "-start_number", f"{0:03d}",
             "-i", f"{folder_name}/positions_%03d.png",
             "-vf", "crop=trunc(iw/2)*2:trunc(ih/2)*2",
             "-pix_fmt", "yuv420p", f"{folder_name}/movie.mp4"
@@ -87,23 +89,21 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE,
 
     # Optionally delete pngs
     if del_pngs:
-        for time in range(T0, Tf):
+        for time in range(count):
             os.remove(f"{folder_name}/positions_{time:03d}.png")
 
-
-box=15
-cutoff=4
-Nparticles=20
+box=25
+cutoff=5
+Nparticles=200
 T=1000
-Dt=0.01
+Dt=0.005
 rod_length=2
 rod_radius=0.2
-khardcore=0
+khardcore=10
 kspring=3
 rate=0.3
 lo=2
-kalign=11
-
+kalign=4
 
 folder_name=f"Dt_{Dt}_Nparticles_{Nparticles}_T_{T}_box_{box}_cutoff_{cutoff}_kalign_{kalign}_khardcore_{khardcore}_kspring_{kspring}_lo_{lo}_rate_{rate}_rod_length_{rod_length}_rod_radius_{rod_radius}"
 positions_file = f"{folder_name}/particle_positions_{folder_name}.dat"
@@ -116,5 +116,5 @@ Theta_b = Theta_b.reshape((Steps,Nparticles))
 
 T0 = 0
 Tf = Steps
-movie_maker_capsules(folder_name,X,Y,Theta_b,T0,Tf,box,rod_length,2*rod_radius,make_ffmpeg_movie=True,Tstart=0,del_pngs=True)
+movie_maker_capsules(folder_name,X,Y,Theta_b,T0,Tf,box,2,ROD_LENGTH=rod_length,ROD_WIDTH=2*rod_radius,make_ffmpeg_movie=True,del_pngs=True)
 # ffmpeg -r 5 -start_number 000 -i 'positions_%03d.png' -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2"  -pix_fmt yuv420p movie.mp4

@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # Define parameters as variables
-box=15
-cutoff=4
-Nparticles=50
-T=200
-Dt=0.01
+box=25
+cutoff=5
+Nparticles=200
+T=1000
+Dt=0.005
 rod_length=2
 rod_radius=0.2
-khardcore=0
+khardcore=10
 kspring=3
-rate=0.1
+rate=0.3
 lo=2
-kalign=5
+kalign=4
 
 # Create folder name based on parameters
 folder_name="Dt_${Dt}_Nparticles_${Nparticles}_T_${T}_box_${box}_cutoff_${cutoff}_kalign_${kalign}_khardcore_${khardcore}_kspring_${kspring}_lo_${lo}_rate_${rate}_rod_length_${rod_length}_rod_radius_${rod_radius}"
@@ -36,12 +36,12 @@ echo "kalign $kalign" >> "$folder_name/params.dat"
 
 
 # Copy the executable to the directory
-cp rods_twitch_sim_torque "$folder_name/"
+cp rods_twitch_pot "$folder_name/"
 
 # Change to the directory and execute the program
 cd "$folder_name" || exit
-./rods_twitch_sim_torque params.dat
+./rods_twitch_pot params.dat
 
-rm rods_twitch_sim_torque 
+rm rods_twitch_pot 
 
 echo "Simulation ${folder_name} completed."

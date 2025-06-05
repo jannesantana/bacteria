@@ -25,7 +25,7 @@ double L,R;  // rod length and half width
 double k_hard; // strength of hardcore repulsion
 double torque = 0.5;
 double kalign; // torque applied to overlapping rods
-int tSave_pos = 10; //save every tSave time steps
+int tSave_pos = 1; //save every tSave time steps
 int tSave_vel = 1;
 int tSave_msd = 1;
 double noise_strength = 0.1; // pillus position noise
@@ -90,7 +90,7 @@ void shortestSegmentSegment(
     double e = dot(d2,d2); //magnitude of segment 2
     double f = dot(d2,r); // projection segment 2 on the vector between the origins of the segments
 
-    const double EPS = 1e-12;
+    const double EPS = 1e-8;
     double s = 0, t = 0;
 
 // Check if either or both segments degenerate into points
@@ -155,7 +155,6 @@ struct Particle {
     double x, y; // Position
     double theta_b; // axis angle of the body
     double theta_p; // pili angle
-    double L,R; //rod length and half width
     double fx, fy; // colisional force 
     double force_pili_x, force_pili_y;
     double xp,yp;// pili
@@ -168,6 +167,7 @@ struct Particle {
     double ini_posx, ini_posy;
     double aux_posx, aux_posy;
     double torque_b;
+
 };
 
     
@@ -249,6 +249,7 @@ void initializeParticles(Particle* particles) {
         particles[idx].torque_b = 0.0;
         particles[idx].rsqrd = 0.0;
        
+       
         
         particles[idx].cellIndex = getCellIndex(particles[idx].x, particles[idx].y);
         ++idx;
@@ -298,111 +299,7 @@ void buildLinkedList(Particle* particles, int* head, int* linkedList) {
 }
 
 
-// void resolveOverlaps( Particle* particles,int* head, int* linkedList )
-// {
-// // A) Recompute each particle’s cellIndex in O(N):
-//     for(int i=0; i<N_particles; ++i) {
-//             particles[i].cellIndex = getCellIndex(particles[i].x,
-//                         particles[i].y);
-//         }
 
-// // B) Rebuild the cell list in O(N):
-// buildLinkedList(particles, head, linkedList);
-
-// // C) Precompute segment endpoints A[i], B[i] in O(N):
-// std::vector<Vector2> A(N_particles), B(N_particles);
-//     for(int i=0; i<N_particles; ++i) {
-//         double ux = std::cos(particles[i].theta_b),
-//         uy = std::sin(particles[i].theta_b);
-//         A[i] = { particles[i].x + 0.5*L*ux,
-//         particles[i].y + 0.5*L*uy };
-//         B[i] = { particles[i].x - 0.5*L*ux,
-//         particles[i].y - 0.5*L*uy };
-//         }
-
-// // D) Loop only over neighboring cells—still ~O(N) or O(N·neighbors):
-//     for(int cell=0; cell<Cells*Cells; ++cell) {
-// // for each of the 9 neighboring cells
-//         for(int dx=-1; dx<=1; ++dx) for(int dy=-1; dy<=1; ++dy) {
-//             int nbx = (cell % Cells + dx + Cells) % Cells;
-//             int nby = (cell / Cells + dy + Cells) % Cells;
-//             int nbrCell = nby*Cells + nbx;
-
-// // walk the linked list in cell ‘cell’ and ‘nbrCell’
-//             for(int i = head[cell]; i!=-1; i = linkedList[i]) {
-               
-//                 for(int j = head[nbrCell]; j!=-1; j = linkedList[j]) {
-//                     if (j <= i) continue;    // avoid double‐checking & self
-
-// // compute closest points & distance
-//                 Vector2 P, Q; double dist;
-//                 shortestSegmentSegment(A[i], B[i],A[j], B[j],P, Q, dist);
-                
-                
-//                 double overlap = 2*R - dist;
-//                 if (overlap > 0) {
-                   
-
-                
-
-//                     // std::cout << "OVERLAP CORRECTION ACTIVATED" << std::endl;
-//                 // unit push direction
-//                     Vector2 diff = P - Q;
-//                     Vector2 n;
-//                     const double EPS = 1e-8;
-
-//                     if (dist > EPS) {
-//                         // normal case
-//                         n = diff * (1.0 / dist);
-//                     } else {
-//                         // fallback: try center-to-center vector
-//                         double cx = particles[i].x - particles[j].x;
-//                         double cy = particles[i].y - particles[j].y;
-//                         double cdist = std::sqrt(cx*cx + cy*cy);
-
-//                         if (cdist > EPS) {
-//                             n = Vector2{cx/cdist, cy/cdist};
-//                         } else {
-//                             // completely coincident: pick a random direction
-//                             double angle = dis2(gen) * 2 * PI;  
-//                             n = Vector2{std::cos(angle), std::sin(angle)};
-//                         }
-//                     }
-
-//                     // 2) Project apart by half the penetration
-//                     particles[i].x +=  0.5 * overlap * n.x;
-//                     particles[i].y +=  0.5 * overlap * n.y;
-//                     particles[j].x -=  0.5 * overlap * n.x;
-//                     particles[j].y -=  0.5 * overlap * n.y;
-
-//                     // 3) Re‐apply PBC immediately
-//                     particles[i].x = applyPBC(particles[i].x);
-//                     particles[i].y = applyPBC(particles[i].y);
-//                     particles[j].x = applyPBC(particles[j].x);
-//                     particles[j].y = applyPBC(particles[j].y);
-                    
-//                     // apply torque to the particles 
-//                     Vector2 ri = P - Vector2{particles[i].x, particles[i].y};
-//                     Vector2 rj = Q - Vector2{particles[j].x, particles[j].y};
-
-//                     double Ti = ri.x * (0.5*overlap * n.y) - ri.y * (0.5*overlap * n.x);
-//                     double Tj = rj.x * (-0.5*overlap * n.y) - rj.y * (-0.5*overlap * n.x);
-                    
-                    
-
-//                     particles[i].theta_b += torque * Ti;  
-//                     particles[j].theta_b += torque * Tj;
-
-//                     }
-//                 }
-                
-                
-
-//                 particles[i].theta_b = applyPBCangle(particles[i].theta_b);
-//             }
-//         }
-//     }
-// }
 
 // Function to perform particle interactions
 void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
@@ -412,61 +309,42 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
         particles[i].fy = 0.0;
         particles[i].force_pili_x = 0.0;
         particles[i].force_pili_y = 0.0;
+        particles[i].torque_b = 0.0;
         
        
     }
 
     for (int i = 0; i < N_particles; ++i) {
+        
 
         Particle& pi = particles[i];
+        // std::cout << "particle " << i << " ("<< pi.x << "," << pi.y << ")" << "\ntheta_b = " << pi.theta_b << std::endl;
         
 
         particles[i].prev_A = particles[i].A;
 
-        // std::cout << "PREV_A = " << particles[i].prev_A << "\n";
+ 
         
 
 
         particles[i].A = dis2(gen);
-
-        // if (particles[i].A <= rate) {
-        //     double alpha = 0.3;
-        //     double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
-
-        //     if (particles[i].prev_A > rate) {
-        //         // fresh extension: forward or reverse
-        //         if (dis2(gen) < 0.6)
-        //           particles[i].theta_p = particles[i].theta_b + dtheta;
-        //         else
-        //           particles[i].theta_p = particles[i].theta_b + PI + dtheta;
-        //       } else {
-        //         // continuing extension: still jitter about body axis
-        //         particles[i].theta_p = particles[i].theta_b + dtheta;
-        //       }
-        //     particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
-        //     particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
-        //     particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-        //     particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
-
-
-        //     } else {
-        //         particles[i].force_pili_x = particles[i].force_pili_y = 0;
-        //     }
-
-
-        // std::cout << "A = " << particles[i].A << "\n";
+        double x_head_pillus = pi.xp - pi.x;
+        double y_head_pillus = pi.yp - pi.y;
+        double dist_head_pillus = sqrt(x_head_pillus*x_head_pillus + y_head_pillus*y_head_pillus);
+    
         
         if ( (particles[i].A <= rate)  && (particles[i].prev_A < rate)) {
             particles[i].moving = 1;
-            double noise = dis(gen)/sqrt(Dt);
+       
+            // double noise = dis(gen)/sqrt(Dt);
           
             // move and keep angle
             // std::cout << "MOVE +  KEEP THETA" << "\n";
             particles[i].theta_p = particles[i].theta_p;
             // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
             // particles[i].theta_b = particles[i].theta_p;
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) + noise*noise_strength;
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) + noise*noise_strength;
+            particles[i].xp = particles[i].x + 0.5*::L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) ;
+            particles[i].yp = particles[i].y + 0.5*::L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) ;
            
         
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
@@ -475,9 +353,10 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
             
         }
-        else if ( (particles[i].A <= rate) && (particles[i].prev_A > rate) ) {
+        else if ( ((particles[i].A <= rate) && (particles[i].prev_A > rate) || (particles[i].moving == 0) )  ) {
             particles[i].moving=1;
-            double noise = dis(gen)/sqrt(Dt);
+           
+            // double noise = dis(gen)/sqrt(Dt);
             
             //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
             bool forward = (dis2(gen) < 0.6);
@@ -491,23 +370,24 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             }
             particles[i].theta_p = applyPBCangle(particles[i].theta_p);
        
-            particles[i].xp = particles[i].x + 0.5*L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p)+ noise*noise_strength;;
-            particles[i].yp = particles[i].y + 0.5*L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p)+ noise*noise_strength;;
+            particles[i].xp = particles[i].x + 0.5*::L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p);
+            particles[i].yp = particles[i].y + 0.5*::L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
            
         
             particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
             particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
 
-        }
-        else if (particles[i].A > rate) {
+        } 
+        else if ((particles[i].A > rate) || (dist_head_pillus <= 0.1) ) {
             
             particles[i].moving = 0;
+        
             // std::cout << "NOT MOVE" << "\n";
             particles[i].theta_p = particles[i].theta_p;
             
             particles[i].force_pili_x = 0.0;
             particles[i].force_pili_y= 0.0;
-            particles[i].torque_b = 0.0;
+            
         
         }
 
@@ -517,10 +397,11 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
         double ux = cos(pi.theta_b);
         double uy = sin(pi.theta_b);
 
-        Vector2 Ai = { particles[i].x + 0.5*particles[i].L * ux,
-            particles[i].y + 0.5*particles[i].L * uy };
-        Vector2 Bi = { particles[i].x - 0.5*particles[i].L * ux,    
-            particles[i].y - 0.5*particles[i].L * uy };
+        Vector2 Ai = { pi.x + 0.5*::L * ux,
+            pi.y + 0.5*::L * uy };
+        Vector2 Bi = { pi.x - 0.5*::L * ux,    
+            pi.y - 0.5*::L * uy };
+            
 
         int cellX = static_cast<int>(pi.x / CUTOFF)% Cells;
         int cellY = static_cast<int>(pi.y / CUTOFF)% Cells;
@@ -541,25 +422,52 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
                         Particle& pj = particles[j];
                         double uxj = cos(pj.theta_b);
                         double uyj = sin(pj.theta_b);
-                        Vector2 Aj = { pj.x + 0.5*pj.L * uxj,
-                            pj.y + 0.5*pj.L * uyj };
-                        Vector2 Bj = { pj.x - 0.5*pj.L * uxj,    
-                            pj.y - 0.5*pj.L * uyj };
+                        Vector2 Aj = { pj.x + 0.5*::L * uxj,
+                            pj.y + 0.5*::L * uyj };
+                        Vector2 Bj = { pj.x - 0.5*::L * uxj,    
+                            pj.y - 0.5*::L * uyj };
 
                             Vector2 P, Q;
                             double dist;
+                            
+                            
+                           
+
                             shortestSegmentSegment(Ai, Bi, Aj, Bj, P, Q, dist);
+                            // std::cout << "distance between " << i << " and " << j << " = " << dist << std::endl;
+                            // std::cout << "R = " << R << std::endl;
+                            // std::cout << "OVERLAP between " << i << " and " << j << " = " << 2*::R - dist << std::endl;
                             // double Alignment = 0;
-                            // if (dist < 2*R) {
-                                // std::cout << "COLLISION" << std::endl;
-                            double overlap = 2*R - dist;
+                            if (dist < 2*::R) {
+                            // std::cout << "COLLISION" << std::endl;
+                            double overlap = 2*::R - dist;
                             // Alignment += sin(2*(pi.theta_b - pj.theta_b));
                             // normalized push‐apart direction:
-                            Vector2 n = (P - Q) * (1.0/dist);
+                            Vector2 diff = P - Q;
+                            Vector2 n;
+                            const double EPS = 1e-8;
+
+                            if (dist > EPS) {
+                                // normal case
+                                n = diff * (1.0 / dist);
+                            } else {
+                                // fallback: try center-to-center vector
+                                double cx = particles[i].x - particles[j].x;
+                                double cy = particles[i].y - particles[j].y;
+                                double cdist = std::sqrt(cx*cx + cy*cy);
+
+                                if (cdist > EPS) {
+                                    n = Vector2{cx/cdist, cy/cdist};
+                                } else {
+                                    // completely coincident: pick a random direction
+                                    double angle = dis2(gen) * 2 * PI;  
+                                    n = Vector2{std::cos(angle), std::sin(angle)};
+                                }
+                            }
                             Vector2 Frep = {k_hard * std::max(0.0,overlap) * n.x,k_hard * std::max(0.0,overlap) * n.y};
-                            // std::cout << "Fmag = " << Fmag <<std::endl;
+                            // std::cout << "Frep = (" << Frep.x << ","<< Frep.y << ")" <<std::endl;
                             
-                            // apply to centers:
+                            // add forces:
                             pi.fx +=  Frep.x;
                             pi.fy +=  Frep.y;
                             pj.fx += -Frep.x;
@@ -571,19 +479,10 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
                             double Tj = rj.x * (-Frep.y) - rj.y * (-Frep.x); // (rj × (–Frep))·ẑ
                             pi.torque_b += Ti;
                             pj.torque_b += Tj;
-                            // }
+                            }
 
 
-                        // double dx_pili = pi.xp - pj.x;
-                        // double dy_pili = pi.yp - pj.y;
-
-                     
-                        
-                        // if ((dx_pili>0) && (dx_pili>(box/2)))  dx_pili=dx-box;
-					    //     if ((dx_pili<0) && (dx_pili< -(box/2))) dx_pili=dx_pili+box;	
-                        // if ((dy_pili>0) && (dy_pili>(box/2)))  dy_pili=dy_pili-box;
-					    //     if ((dy_pili<0) && (dy_pili< -(box/2))) dy_pili=dy+box;	
-                   
+                    
 
                     }
                     j = linkedList[j];
@@ -750,29 +649,6 @@ int main(int argc, char* argv[]) {
         }
 
      
-    //     for(int i=0; i<N_particles; ++i){
-    //         double dx = particles[i].x - prevX[i];
-    //         double dy = particles[i].y - prevY[i];
-            
-    //         dx = (dx + box/2) - floor((dx + box/2)/box)*box - box/2;
-    //         dy = (dy + box/2) - floor((dy + box/2)/box)*box - box/2;
-
-    //         double vx_pre = dx / Dt;
-    //         double vy_pre = dy / Dt;
-
-    //         double v_pre = std::sqrt(vx_pre*vx_pre + vy_pre*vy_pre);
-
-    //         preVel 
-    //         << t*Dt << " " 
-    //         << i    << " "
-    //         << vx_pre << " "
-    //         << vy_pre << " "
-    //         << v_pre  << "\n";
-
-    //         prevX[i] = particles[i].x;
-    //         prevY[i] = particles[i].y;
-
-    //   }
 
 
 
