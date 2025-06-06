@@ -1,5 +1,5 @@
-// c++ rods_twitching_torque.cc -o rods_twitch_sim_torque 
-// To compile Mac: clang++ -std=c++17 -stdlib=libc++ rods_twitching_torque.cc -o rods_twitch_sim_torque
+// c++ rods_twitching_torque_potential.cc -o rods_twitch_pot
+// To compile Mac: clang++ -std=c++17 -stdlib=libc++ rods_twitching_torque_potential.cc -o rods_twitch_pot
 
 #include <iostream>
 #include <sstream>
@@ -25,10 +25,11 @@ double L,R;  // rod length and half width
 double k_hard; // strength of hardcore repulsion
 double torque = 0.5;
 double kalign; // torque applied to overlapping rods
-int tSave_pos = 1; //save every tSave time steps
-int tSave_vel = 1;
-int tSave_msd = 1;
-double noise_strength = 0.1; // pillus position noise
+double noise_thetab;
+double noise_pos;
+int tSave_pos = 10; //save every tSave time steps
+int tSave_vel = 10;
+int tSave_msd = 10;
 // const double sigma_radius=0.8;
 
 std::map<std::string, double> readParams(const std::string& filename) {
@@ -217,8 +218,7 @@ int getCellIndex(double x, double y) {
 
 // Function to initialize particles with random positions
 void initializeParticles(Particle* particles) {
-    
- 
+
 
     int ncol = std::ceil(std::sqrt(N_particles));
     double dx = box / ncol;
@@ -230,11 +230,17 @@ void initializeParticles(Particle* particles) {
         double x = (i + L/2)*dx;
         double y = (j + L/2)*dx;
         // double theta = dis(gen)*2*PI;
-        particles[idx].x = applyPBC(x);
+        if (N_particles > 1) {
+            particles[idx].x = applyPBC(x);
         particles[idx].y = applyPBC(y);
+    } else {
+
+        particles[idx].x = 2*L;
+        particles[idx].y = 2*L;
+    }
+        
         particles[idx].theta_p = dis2(gen) * 2 * PI;
-        particles[idx].xp = 0.0;
-        particles[idx].yp  =0.0;
+        
         particles[idx].A = 0.0;
         particles[idx].prev_A = 0;
         particles[idx].fx = 0.0;
@@ -245,6 +251,8 @@ void initializeParticles(Particle* particles) {
         particles[idx].aux_posx=0.0;
         particles[idx].aux_posy=0.0;
         particles[idx].theta_b = dis2(gen) * 2 * PI;
+        particles[idx].xp = particles[idx].x + ::L*cos(particles[i].theta_b);
+        particles[idx].yp  =particles[idx].y + ::L*sin(particles[i].theta_b);
         particles[idx].moving = 0;
         particles[idx].torque_b = 0.0;
         particles[idx].rsqrd = 0.0;
@@ -328,38 +336,75 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 
 
         particles[i].A = dis2(gen);
-        double x_head_pillus = pi.xp - pi.x;
-        double y_head_pillus = pi.yp - pi.y;
+        double x_head = pi.x + ::L*cos(particles[i].theta_b);
+        double y_head = pi.y + ::L*sin(particles[i].theta_b);
+
+        double x_head_pillus = pi.xp - x_head;
+        double y_head_pillus = pi.yp - y_head;
+
+        if (x_head_pillus >  box*0.5) x_head_pillus -= box;
+        if (x_head_pillus < -box*0.5) x_head_pillus += box;
+    
+        if (y_head_pillus >  box*0.5) y_head_pillus -= box;
+        if (y_head_pillus < -box*0.5) y_head_pillus += box;
+
+
         double dist_head_pillus = sqrt(x_head_pillus*x_head_pillus + y_head_pillus*y_head_pillus);
+        
+        
+        // std::cout << "distance head pillus = "<< dist_head_pillus << "\n";
     
         
         if ( (particles[i].A <= rate)  && (particles[i].prev_A < rate)) {
+
+            if (dist_head_pillus >= 0.1) {
+
+                //  particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+                //  particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+                particles[i].force_pili_x = particles[i].force_pili_x;
+                particles[i].force_pili_y = particles[i].force_pili_y;
+
+                 
+            } else {
+
+                particles[i].theta_p = particles[i].theta_p;
+            // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
+            // particles[i].theta_b = particles[i].theta_p;
+                particles[i].xp = particles[i].x + 0.5*::L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) ;
+                particles[i].yp = particles[i].y + 0.5*::L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) ;
+            
+            
+                particles[i].force_pili_x = -k_spring*(x_head - particles[i].xp);
+                particles[i].force_pili_y = -k_spring*(y_head - particles[i].yp);
+
+            }
+            
             particles[i].moving = 1;
        
             // double noise = dis(gen)/sqrt(Dt);
           
             // move and keep angle
             // std::cout << "MOVE +  KEEP THETA" << "\n";
-            particles[i].theta_p = particles[i].theta_p;
-            // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
-            // particles[i].theta_b = particles[i].theta_p;
-            particles[i].xp = particles[i].x + 0.5*::L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) ;
-            particles[i].yp = particles[i].y + 0.5*::L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) ;
+            // particles[i].theta_p = particles[i].theta_p;
+            // // particles[i].theta_b += sin(particles[i].theta_p - particles[i].theta_b)*Dt;
+            // // particles[i].theta_b = particles[i].theta_p;
+            // particles[i].xp = particles[i].x + 0.5*::L*cos(particles[i].theta_b) + lo*cos(particles[i].theta_p) ;
+            // particles[i].yp = particles[i].y + 0.5*::L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p) ;
            
         
-            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+            // particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
+            // particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
        
 
             
         }
-        else if ( ((particles[i].A <= rate) && (particles[i].prev_A > rate) || (particles[i].moving == 0) )  ) {
+        else if ( (particles[i].A <= rate) && (particles[i].prev_A > rate)  ) {
             particles[i].moving=1;
-           
+          
             // double noise = dis(gen)/sqrt(Dt);
             
             //forward with prob 0.6 and backwards with prob 0.4 (this can be changed)
-            bool forward = (dis2(gen) < 0.6);
+            bool forward = (dis2(gen) < 0.9);
             // small jitter ±alpha:
             double alpha = 0.3;  // adjust to taste
             double dtheta = (dis2(gen)*2.0 - 1.0) * alpha;
@@ -374,16 +419,18 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
             particles[i].yp = particles[i].y + 0.5*::L*sin(particles[i].theta_b) + lo*sin(particles[i].theta_p);
            
         
-            particles[i].force_pili_x = -k_spring*(particles[i].x - particles[i].xp);
-            particles[i].force_pili_y = -k_spring*(particles[i].y - particles[i].yp);
+            particles[i].force_pili_x = -k_spring*(x_head - particles[i].xp);
+            particles[i].force_pili_y = -k_spring*(y_head - particles[i].yp);
 
         } 
-        else if ((particles[i].A > rate) || (dist_head_pillus <= 0.1) ) {
+        else if (particles[i].A > rate) {
             
             particles[i].moving = 0;
         
             // std::cout << "NOT MOVE" << "\n";
             particles[i].theta_p = particles[i].theta_p;
+            particles[i].xp = x_head;
+            particles[i].yp= y_head;
             
             particles[i].force_pili_x = 0.0;
             particles[i].force_pili_y= 0.0;
@@ -499,13 +546,16 @@ void simulateInteractions(Particle* particles, int* head,  int* linkedList) {
 double updatePositions(Particle* particles) {
    
     for (int i = 0; i < N_particles; ++i) {
+        double rnd_thetab = dis(gen);
+        double rnd_pos = dis(gen);
+        
         // double noise = dis(gen)*sqrt(Dt);
 
-        particles[i].theta_b += (torque * particles[i].torque_b) * Dt;
+        particles[i].theta_b += (torque * particles[i].torque_b) * Dt + sqrt(2*noise_thetab*Dt)*rnd_thetab;
     
-        particles[i].x +=(particles[i].force_pili_x + particles[i].fx) * Dt  ; 
+        particles[i].x +=(particles[i].force_pili_x + particles[i].fx) * Dt  +sqrt(2*noise_pos*Dt)*rnd_pos; 
 
-        particles[i].y += (particles[i].force_pili_y + particles[i].fy)* Dt;
+        particles[i].y += (particles[i].force_pili_y + particles[i].fy)* Dt+sqrt(2*noise_pos*Dt)*rnd_pos;
         particles[i].aux_posx += particles[i].force_pili_x * Dt;
         particles[i].aux_posy += particles[i].force_pili_y * Dt;
       
@@ -564,6 +614,9 @@ int main(int argc, char* argv[]) {
     rate = params["rate"];
     lo = params["lo"];
     kalign = params["kalign"];
+    noise_pos = params["noise_pos"];
+    noise_thetab = params["noise_thetab"];
+
     
     
     

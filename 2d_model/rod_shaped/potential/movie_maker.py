@@ -81,7 +81,7 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE, step,
     # Make movie if requested
     if make_ffmpeg_movie:
         subprocess.run([
-            "ffmpeg", "-y", "-r", "40", "-start_number", f"{0:03d}",
+            "ffmpeg", "-y", "-r", "45", "-start_number", f"{0:03d}",
             "-i", f"{folder_name}/positions_%03d.png",
             "-vf", "crop=trunc(iw/2)*2:trunc(ih/2)*2",
             "-pix_fmt", "yuv420p", f"{folder_name}/movie.mp4"
@@ -92,20 +92,22 @@ def movie_maker_capsules(folder_name, X, Y, Theta, T0, Tf, BOX_SIZE, step,
         for time in range(count):
             os.remove(f"{folder_name}/positions_{time:03d}.png")
 
-box=25
+box=30
 cutoff=5
-Nparticles=200
-T=1000
+Nparticles=300
+T=12000
 Dt=0.005
 rod_length=2
 rod_radius=0.2
-khardcore=10
-kspring=3
-rate=0.3
+khardcore=11
+kspring=5
+rate=0.5
 lo=2
 kalign=4
+noise_pos=0.01
+noise_thetab=0.01
 
-folder_name=f"Dt_{Dt}_Nparticles_{Nparticles}_T_{T}_box_{box}_cutoff_{cutoff}_kalign_{kalign}_khardcore_{khardcore}_kspring_{kspring}_lo_{lo}_rate_{rate}_rod_length_{rod_length}_rod_radius_{rod_radius}"
+folder_name=f"Dt_{Dt}_Nparticles_{Nparticles}_T_{T}_box_{box}_cutoff_{cutoff}_kalign_{kalign}_khardcore_{khardcore}_kspring_{kspring}_lo_{lo}_noise_pos_{noise_pos}_noise_thetab_{noise_thetab}_rate_{rate}_rod_length_{rod_length}_rod_radius_{rod_radius}"
 positions_file = f"{folder_name}/particle_positions_{folder_name}.dat"
 squared_disp_file = f"{folder_name}/squared_disp_{folder_name}.dat"
 X,Y,Theta_b,Theta_p = np.loadtxt(positions_file, unpack=True)
